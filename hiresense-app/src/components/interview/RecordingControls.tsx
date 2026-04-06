@@ -92,11 +92,17 @@ export function RecordingControls({ onSkip, onSubmit, question, sessionTitle }: 
     setIsEvaluating(true);
     if (isMenuOpen) setIsMenuOpen(false);
 
+    // 45s frontend timeout — longer than backend's 30s API timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
+
     try {
       const formData = new FormData();
       const candidateName = user?.fullName || user?.firstName || "Anonymous";
       if (user?.id) {
         formData.append("userId", user.id);
+      } else {
+        formData.append("userId", "anonymous");
       }
       formData.append("candidateName", candidateName);
       formData.append("sessionTitle", sessionTitle || "AI Interview Session");
@@ -111,31 +117,28 @@ export function RecordingControls({ onSkip, onSubmit, question, sessionTitle }: 
       const response = await fetch("http://localhost:5000/api/evaluate", {
         method: "POST",
         body: formData,
+        signal: controller.signal,
       });
 
-      if (!response.ok) {
-        let errorDetails = "";
-        try {
-          const errData = await response.json();
-          errorDetails = errData.message || response.statusText;
-        } catch (e) {
-          errorDetails = response.statusText;
-        }
-        throw new Error(`HTTP ${response.status}: ${errorDetails}`);
-      }
+      clearTimeout(timeoutId);
 
       const data = await response.json();
       console.log("Evaluation Result:", data);
 
-      // Save for dashboard hydration
+      // Save for dashboard hydration — even partial data is useful
       if (data && data.data) {
         localStorage.setItem("latestEvaluation", JSON.stringify(data.data));
       }
 
+      if (!response.ok) {
+        console.warn(`⚠️ Server returned ${response.status} but data may have been saved:`, data);
+        toast("Evaluation completed with warnings. Check dashboard for results.", "info");
+      } else {
+        toast("Answer submitted successfully!", "success");
+      }
+
       if (onSubmit) {
         onSubmit();
-      } else {
-        toast("Answer submitted successfully! Loading next question...", "success");
       }
 
       // Reset inputs
@@ -144,9 +147,15 @@ export function RecordingControls({ onSkip, onSubmit, question, sessionTitle }: 
       } else {
         setAudioBlob(null);
       }
-    } catch (error) {
-      console.error("❌ Submission failed:", error);
-      toast("Failed to submit answer.", "error");
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      if (error.name === "AbortError") {
+        console.error("❌ Submission timed out after 45s");
+        toast("Evaluation is taking too long. Please try again.", "error");
+      } else {
+        console.error("❌ Submission failed:", error);
+        toast("Failed to submit answer: " + (error.message || "Unknown error"), "error");
+      }
     } finally {
       setIsEvaluating(false);
     }

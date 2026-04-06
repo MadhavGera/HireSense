@@ -11,6 +11,8 @@ IMPORTANT RULES:
 - If the answer is off-topic or gibberish, give scores of 1 and explain why in weaknesses.
 - Never refuse to evaluate. Every answer deserves feedback.
 
+CRITICAL INSTRUCTION: Even if the user's answer is complete gibberish (e.g., "asdfasdf"), entirely off-topic, a single word, or too short to evaluate, you MUST STILL return the exact requested JSON structure. Do NOT output plain text, apologies, or disclaimers — only JSON. In these cases, set overallScore to 1, all metric scores to 1, leave the "strengths" array empty [], state that the input was unreadable or irrelevant in the "weaknesses" array, and provide a generic "improvedAnswer" for the question.
+
 Return your evaluation STRICTLY as a JSON object with this exact structure:
 { "overallScore": Number (1-10), "metrics": { "technicalDepth": Number (1-10), "communication": Number (1-10), "confidence": Number (1-10) }, "strengths": ["..."], "weaknesses": ["..."], "actionableSuggestions": ["..."], "improvedAnswer": "..." }
 
@@ -37,6 +39,7 @@ exports.evaluateAnswer = async (question, transcription) => {
         ],
       },
       {
+        timeout: 30000, // 30s — prevent hanging on slow/failed responses
         headers: {
           "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "HTTP-Referer": "http://localhost:5000",
@@ -57,16 +60,30 @@ exports.evaluateAnswer = async (question, transcription) => {
       rawJsonResponse = jsonMatch[0];
     }
 
-    const parsed = JSON.parse(rawJsonResponse);
+    let parsed;
+    try {
+      parsed = JSON.parse(rawJsonResponse);
+    } catch (parseErr) {
+      console.warn("⚠️ JSON.parse failed on AI response — returning fallback evaluation.");
+      console.warn("   Raw response was:", rawJsonResponse.substring(0, 300));
+      return {
+        overallScore: 1,
+        metrics: { technicalDepth: 1, communication: 1, confidence: 1 },
+        strengths: [],
+        weaknesses: ["System could not process the provided answer. Input may have been gibberish or too short."],
+        actionableSuggestions: ["Provide a clear, relevant answer that addresses the question directly."],
+        improvedAnswer: "Please provide a clear and relevant answer to the question next time."
+      };
+    }
     
     // Validate that critical fields exist and are numbers
     if (typeof parsed.overallScore !== 'number' || isNaN(parsed.overallScore)) {
-      parsed.overallScore = 2; // Default low score for unparseable results
+      parsed.overallScore = 1;
     }
     if (!parsed.metrics || typeof parsed.metrics !== 'object') {
-      parsed.metrics = { technicalDepth: 2, communication: 2, confidence: 2 };
+      parsed.metrics = { technicalDepth: 1, communication: 1, confidence: 1 };
     }
-    if (!Array.isArray(parsed.strengths)) parsed.strengths = ["No notable strengths identified."];
+    if (!Array.isArray(parsed.strengths)) parsed.strengths = [];
     if (!Array.isArray(parsed.weaknesses)) parsed.weaknesses = ["Answer needs significant improvement."];
     if (!Array.isArray(parsed.actionableSuggestions)) parsed.actionableSuggestions = ["Study the fundamentals of the topic."];
     if (!parsed.improvedAnswer) parsed.improvedAnswer = "A better answer would directly address the question with relevant technical details.";

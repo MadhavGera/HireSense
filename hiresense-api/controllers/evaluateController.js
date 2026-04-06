@@ -24,12 +24,13 @@ exports.processEvaluation = async (req, res) => {
     const rawScore = evaluationResult?.overallScore ?? evaluationResult?.score ?? 2;
     const safeScore = (typeof rawScore === 'number' && !isNaN(rawScore)) ? rawScore : 2;
     
-    const safeStrengths = Array.isArray(evaluationResult?.strengths) && evaluationResult.strengths.length > 0
-      ? evaluationResult.strengths.join(", ")
-      : (evaluationResult?.strengths || "No specific strengths identified.");
-    const safeImprovements = Array.isArray(evaluationResult?.weaknesses) && evaluationResult.weaknesses.length > 0
-      ? evaluationResult.weaknesses.join(", ")
-      : (evaluationResult?.weaknesses || evaluationResult?.improvements || "Answer needs significant improvement.");
+    // Ensure these are ALWAYS strings — Mongoose schema expects String, not Array
+    const safeStrengths = Array.isArray(evaluationResult?.strengths)
+      ? (evaluationResult.strengths.length > 0 ? evaluationResult.strengths.join(", ") : "No specific strengths identified.")
+      : (typeof evaluationResult?.strengths === 'string' && evaluationResult.strengths ? evaluationResult.strengths : "No specific strengths identified.");
+    const safeImprovements = Array.isArray(evaluationResult?.weaknesses)
+      ? (evaluationResult.weaknesses.length > 0 ? evaluationResult.weaknesses.join(", ") : "Answer needs significant improvement.")
+      : (typeof evaluationResult?.weaknesses === 'string' && evaluationResult.weaknesses ? evaluationResult.weaknesses : "Answer needs significant improvement.");
     const safePitch = evaluationResult?.improvedAnswer || evaluationResult?.improvedPitch || "A strong answer would directly address the question with specific details.";
 
     console.log(`📊 Score: ${safeScore}/10 | User: ${req.body.userId || 'anonymous'}`);
