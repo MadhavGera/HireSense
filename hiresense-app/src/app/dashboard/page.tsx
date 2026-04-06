@@ -14,6 +14,10 @@ import {
   FadeInUp,
   ScaleIn,
 } from "@/components/motion/MotionPrimitives";
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
+} from 'recharts';
 
 const quickLinks = [
   {
@@ -53,6 +57,18 @@ const quickLinks = [
 export default function OverviewPage() {
   const router = useRouter();
   const evaluation = useEvaluation();
+
+  // Radar chart data from evaluation metrics
+  const radarData = evaluation.metricsList.map(m => ({
+    subject: m.label,
+    score: m.score,
+  }));
+
+  // Area chart data from reports (reversed for chronological order)
+  const trendData = [...reportsData.reports].reverse().map(r => ({
+    date: r.date.split(',')[0],
+    score: r.score,
+  }));
 
   return (
     <StaggerContainer delayStart={0.05} staggerInterval={0.1}>
@@ -133,47 +149,58 @@ export default function OverviewPage() {
         </StaggerContainer>
       </FadeInUp>
 
-      {/* Quick Score Preview */}
+      {/* Interactive Charts — Skill Profile + Score Trend */}
       <FadeInUp>
-        <div className="bg-surface-container-low rounded-2xl p-6 mb-8 border border-outline-variant/10">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-bold font-headline text-on-surface">
-              Latest Scores
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Radar Chart — Skill Profile */}
+          <div className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10 relative group">
+            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none" />
+            <h2 className="text-lg font-bold font-headline text-on-surface mb-4 flex items-center justify-between">
+              Skill Profile
+              <Link href="/dashboard/performance" className="text-xs text-primary font-semibold hover:underline flex items-center gap-1">Details <ArrowRight className="w-3 h-3" /></Link>
             </h2>
-            <Link
-              href="/dashboard/performance"
-              className="text-xs text-primary font-semibold hover:underline flex items-center gap-1"
-            >
-              View Details <ArrowRight className="w-3 h-3" />
-            </Link>
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                  <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 12 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
+                  <Radar name="Candidate" dataKey="score" stroke="#69f6b8" fill="#69f6b8" fillOpacity={0.3} />
+                  <RechartsTooltip contentStyle={{ backgroundColor: '#192540', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', color: '#dee5ff' }} />
+                </RadarChart>
+              </ResponsiveContainer>
+              <div className="text-center text-xs text-on-surface-variant font-medium mt-1">Interactive multi-axis analysis</div>
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-6">
-            {evaluation.metricsList.map((metric) => (
-              <div key={metric.label} className="flex items-center gap-4">
-                <div className="relative w-14 h-14 flex-shrink-0">
-                  <svg className="w-full h-full -rotate-90" viewBox="0 0 48 48">
-                    <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(133,173,255,0.1)" strokeWidth="4" />
-                    <circle
-                      cx="24" cy="24" r="20" fill="none"
-                      stroke={metric.score >= 8.5 ? "#69f6b8" : metric.score >= 7.5 ? "#85adff" : "#fbabff"}
-                      strokeWidth="4" strokeLinecap="round"
-                      strokeDasharray={`${(metric.score / 10) * 125.6} 125.6`}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-sm font-black font-headline text-on-surface">
-                      {metric.score}
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-on-surface">{metric.label}</p>
-                  <p className="text-xs text-on-surface-variant">
-                    {metric.score >= 8.5 ? "Excellent" : metric.score >= 7.5 ? "Good" : "Needs Work"}
-                  </p>
-                </div>
-              </div>
-            ))}
+
+          {/* Area Chart — Score Trend */}
+          <div className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10 relative group">
+            <div className="absolute inset-0 bg-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none" />
+            <h2 className="text-lg font-bold font-headline text-on-surface mb-4 flex items-center justify-between">
+              Score Trend
+              <Link href="/reports" className="text-xs text-secondary font-semibold hover:underline flex items-center gap-1">History <ArrowRight className="w-3 h-3" /></Link>
+            </h2>
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={trendData}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#85adff" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#85adff" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis domain={[0, 10]} tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <RechartsTooltip contentStyle={{ backgroundColor: '#192540', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', color: '#dee5ff' }} />
+                  <Area type="monotone" dataKey="score" stroke="#85adff" strokeWidth={3} fillOpacity={1} fill="url(#colorScore)" />
+                </AreaChart>
+              </ResponsiveContainer>
+              <div className="text-center text-xs text-on-surface-variant font-medium mt-1">Historical performance overview</div>
+            </div>
           </div>
         </div>
       </FadeInUp>

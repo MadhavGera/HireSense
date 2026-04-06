@@ -2,8 +2,12 @@ const mongoose = require("mongoose");
 
 const evaluationSchema = new mongoose.Schema(
   {
+    userId: { type: String, required: true },
     candidateName: { type: String, default: "Anonymous Candidate" },
     sessionTitle: { type: String, default: "Frontend Engineering - Medium" },
+    question: { type: String },
+    transcription: { type: String },
+    evaluationJSON: { type: Object },
     score: { type: Number, required: true },
     strengths: { type: String, required: true },
     improvements: { type: String, required: true },

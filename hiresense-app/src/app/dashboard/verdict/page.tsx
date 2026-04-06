@@ -1,14 +1,16 @@
 "use client";
 
-import { BadgeCheck, ThumbsUp, ThumbsDown, Trophy, TrendingUp } from "lucide-react";
+import { BadgeCheck, ThumbsUp, ThumbsDown, Trophy, TrendingUp, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 import { verdictData, dashboardData } from "@/data/mockData";
 import {
   StaggerContainer,
   FadeInUp,
-  ScaleIn,
 } from "@/components/motion/MotionPrimitives";
+import {
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer
+} from 'recharts';
 
 const recommendationColors = {
   "Strong Hire": "text-secondary bg-secondary/10 border-secondary/30",
@@ -19,6 +21,12 @@ const recommendationColors = {
 
 export default function VerdictPage() {
   const router = useRouter();
+
+  const radarData = verdictData.categoryScores.map(c => ({
+    subject: c.category,
+    score: c.score,
+    fullMark: 10
+  }));
 
   return (
     <StaggerContainer delayStart={0.05} staggerInterval={0.08}>
@@ -54,17 +62,17 @@ export default function VerdictPage() {
 
             {/* Summary */}
             <div className="flex-1">
-              <p className="text-on-surface leading-relaxed">
+              <p className="text-on-surface leading-relaxed text-sm">
                 {verdictData.summary}
               </p>
             </div>
           </div>
 
           {/* Pool comparison */}
-          <div className="mt-8 flex items-center gap-6 bg-surface-container-highest/50 rounded-xl p-4">
+          <div className="mt-8 flex items-center gap-6 bg-surface-container-highest/50 rounded-xl p-4 border border-outline-variant/10">
             <Trophy className="w-6 h-6 text-secondary flex-shrink-0" />
             <div>
-              <p className="text-sm font-bold text-on-surface">
+              <p className="text-sm font-bold text-on-surface mb-0.5">
                 Ranked #{verdictData.compareToPool.rank} of {verdictData.compareToPool.totalCandidates} candidates
               </p>
               <p className="text-xs text-on-surface-variant">
@@ -79,37 +87,65 @@ export default function VerdictPage() {
         </div>
       </FadeInUp>
 
-      {/* Category Scores */}
-      <FadeInUp>
-        <div className="bg-surface-container-low rounded-2xl p-8 mb-8">
-          <h2 className="text-lg font-bold font-headline text-on-surface mb-6">
-            Weighted Score Breakdown
-          </h2>
-          <StaggerContainer className="space-y-4" delayStart={0} staggerInterval={0.06}>
-            {verdictData.categoryScores.map((cat) => (
-              <ScaleIn key={cat.category}>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm font-semibold text-on-surface w-32">
-                    {cat.category}
-                  </span>
-                  <div className="flex-1 h-3 bg-surface-container-highest rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-primary/60 to-primary"
-                      style={{ width: `${cat.score * 10}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-bold text-on-surface w-12 text-right">
-                    {cat.score}/10
-                  </span>
-                  <span className="text-xs text-on-surface-variant w-16 text-right">
-                    ×{(cat.weight * 100).toFixed(0)}%
-                  </span>
+      {/* Middle Section: Breakdown & Detailed Analysis */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Left: Radar Chart */}
+        <FadeInUp className="h-full">
+          <div className="bg-surface-container-low rounded-2xl p-6 h-full border border-outline-variant/10 flex flex-col">
+            <div className="mb-4">
+              <h2 className="text-lg font-bold font-headline text-on-surface mb-1">
+                Weighted Score Breakdown
+              </h2>
+              <p className="text-xs text-on-surface-variant">
+                Interactive view of your performance across key dimensions.
+              </p>
+            </div>
+            <div className="flex-1 min-h-[250px] w-full mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData}>
+                  <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 10 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
+                  <Radar name="Candidate" dataKey="score" stroke="#85adff" fill="#85adff" fillOpacity={0.3} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </FadeInUp>
+
+        {/* Right: Detailed Analysis */}
+        <FadeInUp className="h-full">
+          <div className="bg-surface-container-low rounded-2xl p-6 h-full border border-outline-variant/10 flex flex-col">
+            <h2 className="text-lg font-bold font-headline text-on-surface mb-6">
+              Detailed AI Analysis
+            </h2>
+            
+            <div className="space-y-4 flex-1 flex flex-col justify-center">
+              {/* Key Differentiator */}
+              <div className="bg-surface-container-high rounded-xl p-5 border border-outline-variant/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <Lightbulb className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-bold text-primary">Key Differentiator</h3>
                 </div>
-              </ScaleIn>
-            ))}
-          </StaggerContainer>
-        </div>
-      </FadeInUp>
+                <p className="text-xs text-on-surface-variant leading-relaxed">
+                  The candidate&apos;s deep understanding of React internals places them in the top 4% of applicants. Their technical depth significantly outperforms the average pool.
+                </p>
+              </div>
+
+              {/* Recommendation & Action Plan */}
+              <div className="bg-surface-container-high rounded-xl p-5 border border-outline-variant/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp className="w-4 h-4 text-tertiary" /> 
+                  <h3 className="text-sm font-bold text-tertiary">Recommendation & Action Plan</h3>
+                </div>
+                <p className="text-xs text-on-surface-variant leading-relaxed">
+                  We recommend proceeding with a follow-up interview focusing on System Design edge-cases. The candidate should prioritize succinctness when answering behavioral questions, perhaps using the STAR method.
+                </p>
+              </div>
+            </div>
+          </div>
+        </FadeInUp>
+      </div>
 
       {/* Pros & Cons */}
       <FadeInUp>

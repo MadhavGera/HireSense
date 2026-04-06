@@ -9,6 +9,7 @@ import {
   CheckCircle, CircleDot, Circle, Headset, LogOut,
   Volume2, Moon, Globe, Shield, ChevronRight,
 } from "lucide-react";
+import { SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import { profileImages, interviewData } from "@/data/mockData";
 import { Button } from "@/components/ui/Button";
@@ -417,12 +418,26 @@ export function TopNavBar({ variant, onExit, onSupport }: TopNavBarProps) {
             </AnimatePresence>
           </div>
         </div>
-        <img
-          alt="Recruiter Profile"
-          className="w-8 h-8 rounded-full border border-outline-variant/30 object-cover cursor-pointer hover:ring-2 hover:ring-primary/30 transition-all"
-          src={profileImages.recruiter}
-          onClick={() => router.push("/settings")}
-        />
+
+        <div className="flex items-center gap-3">
+          <Show when="signed-out">
+            <div className="flex gap-2">
+              <SignInButton mode="modal">
+                <button className="px-4 py-2 rounded-lg bg-surface-container-highest/50 text-on-surface hover:bg-surface-container-highest transition-colors text-xs font-bold border border-outline-variant/10">
+                  Sign In
+                </button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <button className="px-4 py-2 rounded-lg bg-primary text-on-primary hover:bg-primary/90 transition-colors text-xs font-bold">
+                  Sign Up
+                </button>
+              </SignUpButton>
+            </div>
+          </Show>
+          <Show when="signed-in">
+            <UserButton appearance={{ elements: { userButtonAvatarBox: "w-8 h-8" } }} />
+          </Show>
+        </div>
       </div>
     </header>
   );

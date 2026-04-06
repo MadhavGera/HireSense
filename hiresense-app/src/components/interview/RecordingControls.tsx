@@ -5,6 +5,7 @@ import { Mic, Keyboard, Menu, X, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { useUser } from "@clerk/nextjs";
 
 interface RecordingControlsProps {
   onSkip?: () => void;
@@ -14,6 +15,7 @@ interface RecordingControlsProps {
 
 export function RecordingControls({ onSkip, onSubmit, question }: RecordingControlsProps) {
   const { toast } = useToast();
+  const { user } = useUser();
   const [inputMode, setInputMode] = useState<"voice" | "type">("voice");
   const [textInput, setTextInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -91,6 +93,9 @@ export function RecordingControls({ onSkip, onSubmit, question }: RecordingContr
 
     try {
       const formData = new FormData();
+      if (user?.id) {
+        formData.append("userId", user.id);
+      }
       formData.append("candidateName", "Alex Rivera"); // Use dynamic context if available
       formData.append("sessionTitle", "Frontend Engineering - Medium");
       if (question) formData.append("question", question);

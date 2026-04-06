@@ -12,6 +12,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api/evaluate", evaluateRoutes);
+app.get("/api/history/:userId", require("./controllers/evaluateController").getHistory);
 
 // Database Connection
 mongoose

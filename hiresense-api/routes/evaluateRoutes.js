@@ -16,4 +16,7 @@ const upload = multer({
 // Expects multipart/form-data with a file field strictly named "audio"
 router.post("/", upload.single("audio"), processEvaluation);
 
+// POST /api/evaluate/report
+router.post("/report", express.json(), require("../controllers/evaluateController").generateReport);
+
 module.exports = router;
