@@ -1,0 +1,1 @@
+export const MODEL = "openai/gpt-4o-mini";

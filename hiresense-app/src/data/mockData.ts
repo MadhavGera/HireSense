@@ -76,11 +76,254 @@ export const dashboardData = {
   ],
 
   sidebarNavItems: [
-    { label: "Overview", icon: "LayoutDashboard" as const, active: false },
-    { label: "Performance", icon: "BarChart3" as const, active: true },
-    { label: "Skill Gap", icon: "Brain" as const, active: false },
-    { label: "Culture Fit", icon: "Users" as const, active: false },
-    { label: "Final Verdict", icon: "BadgeCheck" as const, active: false },
+    { label: "Overview", icon: "LayoutDashboard" as const, href: "/dashboard" },
+    { label: "Performance", icon: "BarChart3" as const, href: "/dashboard/performance" },
+    { label: "Skill Gap", icon: "Brain" as const, href: "/dashboard/skill-gap" },
+    { label: "Culture Fit", icon: "Users" as const, href: "/dashboard/culture-fit" },
+    { label: "Final Verdict", icon: "BadgeCheck" as const, href: "/dashboard/verdict" },
+  ],
+};
+
+// ─── Reports Mock Data ──────────────────────────────────────────────────────
+
+export const reportsData = {
+  reports: [
+    {
+      id: "rpt-001",
+      title: "Sr. Architect — Final Round",
+      date: "Apr 5, 2026",
+      score: 8.5,
+      status: "completed" as const,
+      duration: "42 min",
+      questions: 12,
+      strengths: ["Architecture", "React", "System Design"],
+      role: "Senior Architect",
+    },
+    {
+      id: "rpt-002",
+      title: "Full-Stack Engineer — Technical",
+      date: "Mar 28, 2026",
+      score: 7.8,
+      status: "completed" as const,
+      duration: "38 min",
+      questions: 10,
+      strengths: ["Node.js", "REST APIs", "SQL"],
+      role: "Full-Stack Engineer",
+    },
+    {
+      id: "rpt-003",
+      title: "Frontend Lead — Culture Fit",
+      date: "Mar 20, 2026",
+      score: 9.1,
+      status: "completed" as const,
+      duration: "30 min",
+      questions: 8,
+      strengths: ["Leadership", "Communication", "Team Building"],
+      role: "Frontend Lead",
+    },
+    {
+      id: "rpt-004",
+      title: "DevOps Engineer — System Design",
+      date: "Mar 12, 2026",
+      score: 6.9,
+      status: "completed" as const,
+      duration: "45 min",
+      questions: 15,
+      strengths: ["Docker", "CI/CD", "AWS"],
+      role: "DevOps Engineer",
+    },
+  ],
+  totalInterviews: 12,
+  averageScore: 8.1,
+  bestCategory: "Technical Depth",
+  improvementRate: "+12%",
+};
+
+// ─── Candidates Mock Data ───────────────────────────────────────────────────
+
+export const candidatesData = {
+  candidates: [
+    {
+      id: "cand-001",
+      name: "Alex Rivera",
+      role: "Sr. Architect",
+      score: 8.5,
+      status: "shortlisted" as const,
+      avatar: "AR",
+      interviewDate: "Apr 5, 2026",
+      topSkills: ["React", "Architecture", "TypeScript"],
+    },
+    {
+      id: "cand-002",
+      name: "Priya Sharma",
+      role: "Sr. Architect",
+      score: 8.2,
+      status: "shortlisted" as const,
+      avatar: "PS",
+      interviewDate: "Apr 4, 2026",
+      topSkills: ["Angular", "System Design", "Java"],
+    },
+    {
+      id: "cand-003",
+      name: "Marcus Chen",
+      role: "Sr. Architect",
+      score: 7.6,
+      status: "under-review" as const,
+      avatar: "MC",
+      interviewDate: "Apr 3, 2026",
+      topSkills: ["Vue.js", "GraphQL", "Python"],
+    },
+    {
+      id: "cand-004",
+      name: "Sophie Laurent",
+      role: "Sr. Architect",
+      score: 7.1,
+      status: "under-review" as const,
+      avatar: "SL",
+      interviewDate: "Apr 2, 2026",
+      topSkills: ["React", "Node.js", "MongoDB"],
+    },
+    {
+      id: "cand-005",
+      name: "James Okafor",
+      role: "Sr. Architect",
+      score: 6.4,
+      status: "rejected" as const,
+      avatar: "JO",
+      interviewDate: "Apr 1, 2026",
+      topSkills: ["PHP", "Laravel", "MySQL"],
+    },
+  ],
+  openPositions: 2,
+  totalApplicants: 47,
+};
+
+// ─── Skill Gap Mock Data ────────────────────────────────────────────────────
+
+export const skillGapData = {
+  required: [
+    { skill: "React / Next.js", required: 90, current: 90, gap: 0 },
+    { skill: "System Design", required: 85, current: 72, gap: 13 },
+    { skill: "TypeScript", required: 80, current: 88, gap: 0 },
+    { skill: "Testing (Jest/RTL)", required: 75, current: 55, gap: 20 },
+    { skill: "Security Best Practices", required: 70, current: 60, gap: 10 },
+    { skill: "CI/CD & DevOps", required: 65, current: 45, gap: 20 },
+    { skill: "Soft Skills / Leadership", required: 80, current: 68, gap: 12 },
+  ],
+  recommendations: [
+    {
+      title: "Complete System Design Course",
+      provider: "educative.io",
+      duration: "20 hours",
+      priority: "high" as const,
+    },
+    {
+      title: "Testing JavaScript Applications",
+      provider: "TestingJavaScript.com",
+      duration: "12 hours",
+      priority: "high" as const,
+    },
+    {
+      title: "AWS Solutions Architect Prep",
+      provider: "A Cloud Guru",
+      duration: "30 hours",
+      priority: "medium" as const,
+    },
+    {
+      title: "Leadership Communication Workshop",
+      provider: "Coursera",
+      duration: "8 hours",
+      priority: "medium" as const,
+    },
+  ],
+};
+
+// ─── Culture Fit Mock Data ──────────────────────────────────────────────────
+
+export const cultureFitData = {
+  overallScore: 7.8,
+  dimensions: [
+    { name: "Collaboration", score: 8.5, description: "Works well in cross-functional teams" },
+    { name: "Adaptability", score: 7.2, description: "Demonstrates flexibility in changing requirements" },
+    { name: "Communication", score: 7.0, description: "Articulates ideas clearly, room for brevity" },
+    { name: "Initiative", score: 8.8, description: "Proactively identifies and solves problems" },
+    { name: "Alignment", score: 7.5, description: "Values align with company mission and engineering culture" },
+  ],
+  behavioralHighlights: [
+    {
+      question: "Describe a time you resolved a conflict within your team.",
+      response: "Led a mediation between two senior engineers who disagreed on the API architecture. Organized a design sprint that resulted in a hybrid approach both parties supported.",
+      rating: 8,
+    },
+    {
+      question: "How do you handle tight deadlines?",
+      response: "I prioritize ruthlessly using an impact/effort matrix and communicate tradeoffs transparently with stakeholders. I once shipped a critical feature 2 days early by negotiating scope.",
+      rating: 9,
+    },
+    {
+      question: "Tell me about a failure and what you learned.",
+      response: "Deployed a caching layer that caused stale data issues. I learned to implement comprehensive integration tests and now advocate for a 'test the cache' mindset.",
+      rating: 7,
+    },
+  ],
+};
+
+// ─── Final Verdict Mock Data ────────────────────────────────────────────────
+
+export const verdictData = {
+  recommendation: "Strong Hire" as const,
+  confidence: 87,
+  summary:
+    "Alex Rivera demonstrates exceptional technical depth, particularly in React ecosystem and frontend architecture. Communication can be improved by reducing filler words and structuring answers more concisely. Strong culture fit and leadership potential make this candidate an excellent match for the Sr. Architect role.",
+  pros: [
+    "Deep understanding of React internals and Virtual DOM",
+    "Strong system design thinking for large-scale applications",
+    "Proactive problem-solving approach with clear past examples",
+    "High confidence and composure during technical questioning",
+  ],
+  cons: [
+    "Excessive use of filler words (\"um\", \"uh\") — 14 occurrences",
+    "Could improve structuring of behavioral answers",
+    "Limited depth on testing and security topics",
+  ],
+  compareToPool: {
+    rank: 2,
+    totalCandidates: 47,
+    percentile: 96,
+  },
+  categoryScores: [
+    { category: "Technical", score: 9.0, weight: 0.35 },
+    { category: "Communication", score: 7.2, weight: 0.20 },
+    { category: "Confidence", score: 8.4, weight: 0.15 },
+    { category: "Culture Fit", score: 7.8, weight: 0.15 },
+    { category: "Problem Solving", score: 8.6, weight: 0.15 },
+  ],
+};
+
+// ─── Settings Mock Data ─────────────────────────────────────────────────────
+
+export const settingsData = {
+  profile: {
+    name: "Alex Rivera",
+    email: "alex.rivera@company.com",
+    role: "Hiring Manager",
+    company: "TechCorp Inc.",
+    timezone: "PST (UTC-8)",
+  },
+  preferences: {
+    darkMode: true,
+    language: "English (US)",
+    emailNotifications: true,
+    interviewReminders: true,
+    weeklyDigest: false,
+    soundEffects: true,
+    autoSave: true,
+  },
+  integrations: [
+    { name: "Google Calendar", connected: true, icon: "Calendar" },
+    { name: "Slack", connected: true, icon: "MessageSquare" },
+    { name: "LinkedIn", connected: false, icon: "ExternalLink" },
+    { name: "Greenhouse ATS", connected: false, icon: "Database" },
   ],
 };
 
@@ -99,10 +342,23 @@ export const interviewData = {
     { label: "Closing", status: "pending" as const },
   ],
 
-  currentTopic: "React Fundamentals",
-  question:
-    "How would you explain the difference between a virtual DOM and the real DOM in React?",
-  highlightedWords: ["virtual DOM", "real DOM"],
+  questions: [
+    {
+      topic: "React Fundamentals",
+      question: "How would you explain the difference between a virtual DOM and the real DOM in React?",
+      highlightedWords: ["virtual DOM", "real DOM"],
+    },
+    {
+      topic: "State Management",
+      question: "When would you use Context API instead of passing props down manually?",
+      highlightedWords: ["Context API", "props down manually"],
+    },
+    {
+      topic: "Performance",
+      question: "What are some common ways to optimize a React application's performance?",
+      highlightedWords: ["optimize", "performance"],
+    }
+  ],
 
   aiAnalysis: {
     listening: {

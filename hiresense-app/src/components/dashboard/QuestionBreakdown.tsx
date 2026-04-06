@@ -22,7 +22,7 @@ export function QuestionBreakdown() {
   };
 
   return (
-    <div className="bg-surface-container-low p-8 rounded-2xl">
+    <div className="bg-surface-container-low p-8 rounded-2xl hover-lift">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold font-headline text-on-surface">
           Question Breakdown

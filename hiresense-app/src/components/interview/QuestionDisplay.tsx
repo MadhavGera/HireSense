@@ -1,7 +1,16 @@
 import { interviewData } from "@/data/mockData";
 
-export function QuestionDisplay() {
-  const { question, highlightedWords, currentTopic } = interviewData;
+interface QuestionDisplayProps {
+  question?: string;
+  highlightedWords?: string[];
+  topic?: string;
+}
+
+export function QuestionDisplay(props: QuestionDisplayProps) {
+  const fallback = interviewData.questions?.[0] ?? { question: "", highlightedWords: [], topic: "" };
+  const question = props.question ?? fallback.question;
+  const highlightedWords = props.highlightedWords ?? fallback.highlightedWords;
+  const currentTopic = props.topic ?? fallback.topic;
 
   // Highlight specific words in the question
   const renderQuestion = () => {
@@ -9,7 +18,7 @@ export function QuestionDisplay() {
     const elements: React.ReactNode[] = [];
     let lastIndex = 0;
 
-    highlightedWords.forEach((word) => {
+    highlightedWords.forEach((word: string) => {
       const idx = result.indexOf(word, lastIndex);
       if (idx !== -1) {
         if (idx > lastIndex) {

@@ -1,12 +1,21 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Mic, Keyboard, Menu, X } from "lucide-react";
+import { Mic, Keyboard, Menu, X, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 
-export function RecordingControls() {
+interface RecordingControlsProps {
+  onSkip?: () => void;
+  onSubmit?: () => void;
+  question?: string;
+}
+
+export function RecordingControls({ onSkip, onSubmit, question }: RecordingControlsProps) {
+  const { toast } = useToast();
   const [inputMode, setInputMode] = useState<"voice" | "type">("voice");
+  const [textInput, setTextInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
@@ -58,9 +67,22 @@ export function RecordingControls() {
     }
   };
 
+  const handleSkip = () => {
+    if (onSkip) {
+      onSkip();
+    } else {
+      toast("Question skipped. Loading next question...", "info");
+    }
+    if (isMenuOpen) setIsMenuOpen(false);
+  };
+
   const handleSubmit = async () => {
     if (inputMode === "voice" && !audioBlob) {
-      alert("Please record an audio answer first before submitting.");
+      toast("Please record an audio answer first before submitting.", "error");
+      return;
+    }
+    if (inputMode === "type" && !textInput.trim()) {
+      toast("Please type an answer first before submitting.", "error");
       return;
     }
 
@@ -69,10 +91,15 @@ export function RecordingControls() {
 
     try {
       const formData = new FormData();
-      if (audioBlob) {
-        formData.append("audio", audioBlob, "recording.webm");
+      formData.append("candidateName", "Alex Rivera"); // Use dynamic context if available
+      formData.append("sessionTitle", "Frontend Engineering - Medium");
+      if (question) formData.append("question", question);
+
+      if (inputMode === "voice" && audioBlob) {
+        formData.append("audio", audioBlob, "answer.webm");
+      } else if (inputMode === "type" && textInput) {
+        formData.append("textAnswer", textInput);
       }
-      formData.append("candidateName", "Alex Rivera"); // Extra context
 
       const response = await fetch("http://localhost:5000/api/evaluate", {
         method: "POST",
@@ -80,13 +107,34 @@ export function RecordingControls() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let errorDetails = "";
+        try {
+          const errData = await response.json();
+          errorDetails = errData.message || response.statusText;
+        } catch(e) {
+          errorDetails = response.statusText;
+        }
+        throw new Error(`HTTP ${response.status}: ${errorDetails}`);
       }
 
-      const jsonObj = await response.json();
-      console.log("✅ Extracted Evaluation Payload:", jsonObj);
+      const data = await response.json();
+      console.log("Evaluation Result:", data);
+      
+      if (onSubmit) {
+        onSubmit();
+      } else {
+        toast("Answer submitted successfully! Loading next question...", "success");
+      }
+      
+      // Reset inputs
+      if (inputMode === "type") {
+        setTextInput("");
+      } else {
+        setAudioBlob(null);
+      }
     } catch (error) {
-      console.error("❌ API Submission failed:", error);
+      console.error("❌ Submission failed:", error);
+      toast("Failed to submit answer.", "error");
     } finally {
       setIsEvaluating(false);
     }
@@ -125,44 +173,61 @@ export function RecordingControls() {
           </div>
         </div>
 
-        {/* Main Mic Action */}
-        <div className="flex-shrink-0 flex justify-center -translate-y-6 lg:-translate-y-12 px-2 relative z-10">
-          <button
-            onClick={toggleRecording}
-            className="group relative flex flex-col items-center gap-3"
-          >
-            <div
-              className={cn(
-                "w-16 h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center transform group-hover:scale-105 transition-all duration-300",
-                isRecording
-                  ? "bg-gradient-to-br from-error to-error-dim mic-glow-active"
-                  : "bg-gradient-to-br from-primary to-primary-container mic-glow"
-              )}
+        {/* Center Area (Mic or Textarea) */}
+        <div className={cn(
+          "flex justify-center relative z-10 transition-all duration-300",
+          inputMode === "voice" 
+            ? "flex-shrink-0 -translate-y-6 lg:-translate-y-12 px-2" 
+            : "flex-[2] px-4 min-w-[200px] lg:px-8"
+        )}>
+          {inputMode === "voice" ? (
+            <button
+              onClick={toggleRecording}
+              className="group relative flex flex-col items-center gap-3"
             >
-              <Mic
+              <div
                 className={cn(
-                  "w-6 h-6 lg:w-8 lg:h-8",
-                  isRecording ? "text-white" : "text-on-primary"
+                  "w-16 h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center transform group-hover:scale-105 transition-all duration-300",
+                  isRecording
+                    ? "bg-gradient-to-br from-error to-error-dim mic-glow-active"
+                    : "bg-gradient-to-br from-primary to-primary-container mic-glow"
                 )}
-                fill="currentColor"
+              >
+                <Mic
+                  className={cn(
+                    "w-6 h-6 lg:w-8 lg:h-8",
+                    isRecording ? "text-white" : "text-on-primary"
+                  )}
+                  fill="currentColor"
+                />
+              </div>
+              <span
+                className={cn(
+                  "text-[10px] lg:text-xs font-bold uppercase tracking-widest whitespace-nowrap",
+                  isRecording ? "text-error animate-pulse" : "text-primary hover:opacity-80 transition-opacity"
+                )}
+              >
+                {isRecording ? "Stop Recording" : (audioBlob ? "Re-Record Answer" : "Start Recording")}
+              </span>
+            </button>
+          ) : (
+            <div className="w-full max-w-2xl bg-surface-container-high border border-outline-variant/20 rounded-xl p-2 lg:p-3 shadow-inner">
+              <textarea
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                placeholder="Type your answer here..."
+                disabled={isEvaluating}
+                className="w-full h-16 lg:h-24 bg-transparent resize-none outline-none text-on-surface p-2 text-xs lg:text-sm placeholder:text-on-surface-variant/50 focus:ring-1 focus:ring-primary/30 rounded-lg transition-all"
               />
             </div>
-            <span
-              className={cn(
-                "text-[10px] lg:text-xs font-bold uppercase tracking-widest whitespace-nowrap",
-                isRecording ? "text-error animate-pulse" : "text-primary hover:opacity-80 transition-opacity"
-              )}
-            >
-              {isRecording ? "Stop Recording" : (audioBlob ? "Re-Record Answer" : "Start Recording")}
-            </span>
-          </button>
+          )}
         </div>
 
         {/* Right Controls */}
         <div className="flex-1 flex justify-end relative">
           {/* Desktop Right Controls */}
           <div className="hidden lg:flex items-center gap-4">
-            <Button variant="secondary" size="lg" className="px-8">
+            <Button variant="secondary" size="lg" className="px-8" onClick={handleSkip}>
               Skip Question
             </Button>
             <Button 
@@ -200,7 +265,7 @@ export function RecordingControls() {
                   : "opacity-0 scale-95 translate-y-4 pointer-events-none"
               )}
             >
-              <Button variant="secondary" className="w-full justify-center">
+              <Button variant="secondary" className="w-full justify-center" onClick={handleSkip}>
                 Skip Question
               </Button>
               <Button 

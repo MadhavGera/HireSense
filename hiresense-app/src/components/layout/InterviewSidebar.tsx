@@ -4,6 +4,8 @@ import { CheckCircle, CircleDot, Circle, Headset, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { interviewData } from "@/data/mockData";
 import { Button } from "@/components/ui/Button";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/Toast";
 
 const statusConfig = {
   completed: {
@@ -27,7 +29,33 @@ const statusConfig = {
   },
 };
 
-export function InterviewSidebar() {
+interface InterviewSidebarProps {
+  onExit?: () => void;
+  onSupport?: () => void;
+  progressPercent?: number;
+}
+
+export function InterviewSidebar({ onExit, onSupport, progressPercent }: InterviewSidebarProps) {
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleExit = () => {
+    if (onExit) {
+      onExit();
+    } else {
+      toast("Interview ended early. Progress saved.", "info");
+      router.push("/dashboard");
+    }
+  };
+
+  const handleSupport = () => {
+    if (onSupport) {
+      onSupport();
+    } else {
+      toast("Connecting to support team...", "info");
+    }
+  };
+
   return (
     <aside className="hidden lg:flex fixed left-0 top-0 h-full flex-col pt-20 bg-surface-container-low w-64 border-r border-outline-variant/[0.15] shadow-[40px_0_40px_rgba(25,37,64,0.08)] z-40">
       {/* Progress Header */}
@@ -36,7 +64,7 @@ export function InterviewSidebar() {
           Interview Progress
         </h2>
         <p className="font-body text-sm font-medium text-on-surface-variant">
-          {interviewData.completionPercent}% Completed
+          {progressPercent ?? interviewData.completionPercent}% Completed
         </p>
       </div>
 
@@ -75,11 +103,17 @@ export function InterviewSidebar() {
           View Guidelines
         </Button>
         <div className="border-t border-outline-variant/10 pt-4 space-y-1">
-          <div className="flex items-center gap-3 text-on-surface-variant p-2 hover:bg-surface-bright rounded-lg cursor-pointer transition-colors">
+          <div 
+            onClick={handleSupport}
+            className="flex items-center gap-3 text-on-surface-variant p-2 hover:bg-surface-bright rounded-lg cursor-pointer transition-colors"
+          >
             <Headset className="w-4 h-4" />
             <span className="text-xs">Support</span>
           </div>
-          <div className="flex items-center gap-3 text-on-surface-variant p-2 hover:bg-surface-bright rounded-lg cursor-pointer transition-colors">
+          <div 
+            onClick={handleExit}
+            className="flex items-center gap-3 text-on-surface-variant p-2 hover:bg-surface-bright rounded-lg cursor-pointer transition-colors"
+          >
             <LogOut className="w-4 h-4" />
             <span className="text-xs">Exit</span>
           </div>

@@ -90,9 +90,11 @@ body {
 ::-webkit-scrollbar {
   width: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: #060e20;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #40485d;
   border-radius: 10px;
@@ -114,29 +116,35 @@ body {
   0% {
     box-shadow: 0 0 0 0 rgba(105, 246, 184, 0.4);
   }
+
   70% {
     box-shadow: 0 0 0 8px rgba(105, 246, 184, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(105, 246, 184, 0);
   }
 }
 
 @keyframes mic-breathe {
+
   0%,
   100% {
     box-shadow: 0 0 20px rgba(133, 173, 255, 0.3);
   }
+
   50% {
     box-shadow: 0 0 40px rgba(133, 173, 255, 0.6);
   }
 }
 
 @keyframes bar-bounce {
+
   0%,
   100% {
     transform: scaleY(0.4);
   }
+
   50% {
     transform: scaleY(1);
   }
@@ -156,4 +164,240 @@ body {
 
 .audio-bar {
   animation: bar-bounce 1s ease-in-out infinite;
+}
+
+/* ── Entrance Animations ─────────────────────────────────────────────────── */
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-in-left {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shimmer-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 15px rgba(133, 173, 255, 0.1), 0 0 30px rgba(133, 173, 255, 0.05);
+  }
+
+  50% {
+    box-shadow: 0 0 25px rgba(133, 173, 255, 0.2), 0 0 50px rgba(133, 173, 255, 0.1);
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes score-count {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  60% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes border-glow {
+
+  0%,
+  100% {
+    border-color: rgba(133, 173, 255, 0.1);
+  }
+
+  50% {
+    border-color: rgba(133, 173, 255, 0.3);
+  }
+}
+
+/* Utility Classes */
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out both;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-shimmer-glow {
+  animation: shimmer-glow 3s ease-in-out infinite;
+}
+
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+}
+
+.animate-score-pop {
+  animation: score-count 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+.animate-border-glow {
+  animation: border-glow 3s ease-in-out infinite;
+}
+
+/* Staggered Delay Utilities */
+.delay-0 {
+  animation-delay: 0ms;
+}
+
+.delay-1 {
+  animation-delay: 80ms;
+}
+
+.delay-2 {
+  animation-delay: 160ms;
+}
+
+.delay-3 {
+  animation-delay: 240ms;
+}
+
+.delay-4 {
+  animation-delay: 320ms;
+}
+
+.delay-5 {
+  animation-delay: 400ms;
+}
+
+.delay-6 {
+  animation-delay: 480ms;
+}
+
+.delay-7 {
+  animation-delay: 560ms;
+}
+
+.delay-8 {
+  animation-delay: 640ms;
+}
+
+/* Card Hover Lift */
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(133, 173, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Smooth glow underline for nav links */
+.nav-link-glow {
+  position: relative;
+}
+
+.nav-link-glow::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #85adff, transparent);
+  transition: width 0.3s ease, left 0.3s ease;
+  border-radius: 2px;
+}
+
+.nav-link-glow:hover::after {
+  width: 100%;
+  left: 0;
 }

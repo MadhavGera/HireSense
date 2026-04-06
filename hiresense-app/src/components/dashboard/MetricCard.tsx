@@ -24,7 +24,7 @@ export function MetricCard({
   const Icon = iconMap[icon];
 
   return (
-    <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group">
+    <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group hover-lift border border-outline-variant/10 animate-border-glow">
       <div className="flex justify-between items-start mb-4">
         <div className="text-on-surface-variant text-xs font-label uppercase tracking-wider">
           {label}

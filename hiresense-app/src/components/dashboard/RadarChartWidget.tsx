@@ -11,7 +11,7 @@ import { dashboardData } from "@/data/mockData";
 
 export function RadarChartWidget() {
   return (
-    <div className="bg-surface-container-high p-6 rounded-2xl">
+    <div className="bg-surface-container-high p-6 rounded-2xl hover-lift animate-shimmer-glow">
       <h2 className="text-lg font-bold font-headline text-on-surface mb-6">
         Skill Breakdown
       </h2>
