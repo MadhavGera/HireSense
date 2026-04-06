@@ -38,7 +38,7 @@ export function RecordingControls({ onSkip, onSubmit, question }: RecordingContr
         // Try recording in webm, fallback to whatever browser supports if it fails
         const options = MediaRecorder.isTypeSupported('audio/webm') ? { mimeType: 'audio/webm' } : {};
         const mediaRecorder = new MediaRecorder(stream, options);
-        
+
         mediaRecorderRef.current = mediaRecorder;
         audioChunksRef.current = [];
 
@@ -52,7 +52,7 @@ export function RecordingControls({ onSkip, onSubmit, question }: RecordingContr
           const blobMimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp3';
           const blob = new Blob(audioChunksRef.current, { type: blobMimeType });
           setAudioBlob(blob);
-          
+
           // Release mic tracks
           stream.getTracks().forEach((track) => track.stop());
         };
@@ -101,7 +101,7 @@ export function RecordingControls({ onSkip, onSubmit, question }: RecordingContr
         formData.append("textAnswer", textInput);
       }
 
-      const response = await fetch("http://localhost:5000/api/evaluate", {
+      const response = await fetch("/api/backend/evaluate", {
         method: "POST",
         body: formData,
       });
@@ -111,7 +111,7 @@ export function RecordingControls({ onSkip, onSubmit, question }: RecordingContr
         try {
           const errData = await response.json();
           errorDetails = errData.message || response.statusText;
-        } catch(e) {
+        } catch (e) {
           errorDetails = response.statusText;
         }
         throw new Error(`HTTP ${response.status}: ${errorDetails}`);
@@ -120,12 +120,17 @@ export function RecordingControls({ onSkip, onSubmit, question }: RecordingContr
       const data = await response.json();
       console.log("Evaluation Result:", data);
       
+      // Save for dashboard hydration
+      if (data && data.data) {
+        localStorage.setItem("latestEvaluation", JSON.stringify(data.data));
+      }
+
       if (onSubmit) {
         onSubmit();
       } else {
         toast("Answer submitted successfully! Loading next question...", "success");
       }
-      
+
       // Reset inputs
       if (inputMode === "type") {
         setTextInput("");
@@ -176,8 +181,8 @@ export function RecordingControls({ onSkip, onSubmit, question }: RecordingContr
         {/* Center Area (Mic or Textarea) */}
         <div className={cn(
           "flex justify-center relative z-10 transition-all duration-300",
-          inputMode === "voice" 
-            ? "flex-shrink-0 -translate-y-6 lg:-translate-y-12 px-2" 
+          inputMode === "voice"
+            ? "flex-shrink-0 -translate-y-6 lg:-translate-y-12 px-2"
             : "flex-[2] px-4 min-w-[200px] lg:px-8"
         )}>
           {inputMode === "voice" ? (
@@ -230,8 +235,8 @@ export function RecordingControls({ onSkip, onSubmit, question }: RecordingContr
             <Button variant="secondary" size="lg" className="px-8" onClick={handleSkip}>
               Skip Question
             </Button>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="font-black px-10"
               onClick={handleSubmit}
               disabled={isEvaluating || isRecording}
@@ -246,8 +251,8 @@ export function RecordingControls({ onSkip, onSubmit, question }: RecordingContr
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className={cn(
                 "p-3 rounded-full border transition-colors relative z-50 flex items-center justify-center",
-                isMenuOpen 
-                  ? "bg-surface-variant border-outline-variant text-on-surface" 
+                isMenuOpen
+                  ? "bg-surface-variant border-outline-variant text-on-surface"
                   : "bg-surface-container-low border-outline-variant/20 hover:bg-surface-variant text-on-surface"
               )}
               aria-expanded={isMenuOpen}
@@ -268,7 +273,7 @@ export function RecordingControls({ onSkip, onSubmit, question }: RecordingContr
               <Button variant="secondary" className="w-full justify-center" onClick={handleSkip}>
                 Skip Question
               </Button>
-              <Button 
+              <Button
                 className="w-full font-black justify-center"
                 onClick={handleSubmit}
                 disabled={isEvaluating || isRecording}

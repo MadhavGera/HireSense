@@ -5,15 +5,16 @@ import { useRouter } from "next/navigation";
 import { Copy, Brain, Sparkles, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { dashboardData } from "@/data/mockData";
+import { useEvaluation } from "@/lib/useEvaluation";
 
 export function AIRecommendedPitch() {
+  const { improvedPitch } = useEvaluation();
   const [isCopied, setIsCopied] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(dashboardData.aiPitch);
+    navigator.clipboard.writeText(improvedPitch);
     setIsCopied(true);
     toast("Pitch copied to clipboard!", "success");
     setTimeout(() => setIsCopied(false), 2000);
@@ -42,7 +43,7 @@ export function AIRecommendedPitch() {
         </div>
 
         <p className="text-on-surface leading-loose text-lg font-medium italic">
-          {dashboardData.aiPitch}
+          "{improvedPitch}"
         </p>
 
         <div className="mt-8 flex gap-4">

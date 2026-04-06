@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { dashboardData, reportsData, candidatesData } from "@/data/mockData";
+import { useEvaluation } from "@/lib/useEvaluation";
 import {
   StaggerContainer,
   FadeInUp,
@@ -51,6 +52,7 @@ const quickLinks = [
 
 export default function OverviewPage() {
   const router = useRouter();
+  const evaluation = useEvaluation();
 
   return (
     <StaggerContainer delayStart={0.05} staggerInterval={0.1}>
@@ -59,7 +61,7 @@ export default function OverviewPage() {
         <div className="flex items-center justify-between mb-10">
           <div>
             <h1 className="text-4xl font-black font-headline text-on-surface tracking-tight">
-              Welcome back, {dashboardData.candidateName}
+              Welcome back, {evaluation.candidateName}
             </h1>
             <p className="text-on-surface-variant mt-2 text-lg">
               Here&apos;s a quick snapshot of your interview journey.
@@ -86,7 +88,7 @@ export default function OverviewPage() {
           {[
             {
               label: "Hireability Score",
-              value: `${dashboardData.hireabilityScore}/10`,
+              value: `${evaluation.hireabilityScore}/10`,
               sub: dashboardData.percentile,
               icon: Target,
               accent: "text-primary",
@@ -146,7 +148,7 @@ export default function OverviewPage() {
             </Link>
           </div>
           <div className="grid grid-cols-3 gap-6">
-            {dashboardData.metrics.map((metric) => (
+            {evaluation.metricsList.map((metric) => (
               <div key={metric.label} className="flex items-center gap-4">
                 <div className="relative w-14 h-14 flex-shrink-0">
                   <svg className="w-full h-full -rotate-90" viewBox="0 0 48 48">

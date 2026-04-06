@@ -1,9 +1,9 @@
 import { CheckCircle, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
-import { dashboardData } from "@/data/mockData";
+import { useEvaluation } from "@/lib/useEvaluation";
 
 export function QuestionBreakdown() {
-  const { questionBreakdown: q } = dashboardData;
+  const { questionBreakdown: q } = useEvaluation();
 
   // Parse transcript to highlight filler words
   const renderTranscript = () => {

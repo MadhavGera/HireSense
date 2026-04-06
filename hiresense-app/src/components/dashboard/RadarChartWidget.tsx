@@ -7,9 +7,10 @@ import {
   Radar,
   ResponsiveContainer,
 } from "recharts";
-import { dashboardData } from "@/data/mockData";
+import { useEvaluation } from "@/lib/useEvaluation";
 
 export function RadarChartWidget() {
+  const { skillBreakdown } = useEvaluation();
   return (
     <div className="bg-surface-container-high p-6 rounded-2xl hover-lift animate-shimmer-glow">
       <h2 className="text-lg font-bold font-headline text-on-surface mb-6">
@@ -18,7 +19,7 @@ export function RadarChartWidget() {
       <div className="aspect-square relative">
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart
-            data={dashboardData.skillBreakdown}
+            data={skillBreakdown}
             cx="50%"
             cy="50%"
             outerRadius="70%"

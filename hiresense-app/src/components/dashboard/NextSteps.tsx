@@ -1,18 +1,22 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { GraduationCap, Mic, Users, ExternalLink } from "lucide-react";
+import { GraduationCap, Mic, Users, ExternalLink, Target, Zap, Brain } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { dashboardData } from "@/data/mockData";
+import { useEvaluation } from "@/lib/useEvaluation";
 
 const iconMap = {
   GraduationCap,
   Mic,
   Users,
+  Target,
+  Zap,
+  Brain,
 };
 
 export function NextSteps() {
+  const { nextSteps } = useEvaluation();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -31,7 +35,7 @@ export function NextSteps() {
         Next Steps
       </h2>
       <ul className="space-y-4">
-        {dashboardData.nextSteps.map((step) => {
+        {nextSteps.map((step) => {
           const Icon = iconMap[step.icon as keyof typeof iconMap];
           return (
             <li
