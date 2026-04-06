@@ -1,6 +1,6 @@
 "use client";
 
-import { dashboardData } from "@/data/mockData";
+import { useEvaluation } from "@/lib/useEvaluation";
 import {
   StaggerContainer,
   MaskedLineReveal,
@@ -38,6 +38,7 @@ const scoreTextVariants: Variants = {
 };
 
 export function HeroScore() {
+  const evaluation = useEvaluation();
   return (
     <div className="mb-12 flex flex-col md:flex-row items-center gap-12 relative">
       {/* ── Parallax background elements ─────────────────────────────── */}
@@ -74,7 +75,7 @@ export function HeroScore() {
           className="relative text-center"
         >
           <div className="text-5xl font-black font-headline text-on-surface">
-            {dashboardData.hireabilityScore}
+            {evaluation.hireabilityScore}
           </div>
           <div className="text-on-surface-variant font-label uppercase tracking-widest text-[10px]">
             Hireability Score
@@ -97,7 +98,7 @@ export function HeroScore() {
             <span>Congratulations,</span>
           </MaskedLineReveal>
           <MaskedLineReveal>
-            <span>{dashboardData.candidateName}!</span>
+            <span>{evaluation.candidateName}!</span>
           </MaskedLineReveal>
         </h1>
 
@@ -106,7 +107,7 @@ export function HeroScore() {
           <p className="text-lg text-on-surface-variant max-w-2xl leading-relaxed">
             Your interview performance ranks in the{" "}
             <span className="text-secondary font-bold">
-              {dashboardData.percentile}
+              top percentile
             </span>{" "}
             of applicants for the Senior Architect role. The AI has identified
             significant strengths in technical depth and leadership readiness.

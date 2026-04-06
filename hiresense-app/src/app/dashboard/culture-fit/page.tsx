@@ -1,7 +1,8 @@
 "use client";
 
 import { Heart, MessageCircle, Star } from "lucide-react";
-import { cultureFitData, dashboardData } from "@/data/mockData";
+import { cultureFitData } from "@/data/mockData";
+import { useEvaluation } from "@/lib/useEvaluation";
 import {
   StaggerContainer,
   FadeInUp,
@@ -35,6 +36,14 @@ function ScoreRing({ score, label }: { score: number; label: string }) {
 }
 
 export default function CultureFitPage() {
+  const evaluation = useEvaluation();
+  const overallScore = Math.round(evaluation.hireabilityScore / 10);
+  const derivedDimensions = evaluation.metricsList.map(m => ({
+    name: m.label,
+    score: Math.round(m.score / 10),
+    description: `Evaluates proficiency in ${m.label}.`,
+  }));
+
   return (
     <StaggerContainer delayStart={0.05} staggerInterval={0.08}>
       {/* Header */}
@@ -45,7 +54,7 @@ export default function CultureFitPage() {
           </h1>
           <p className="text-on-surface-variant mt-2 text-lg">
             Behavioral analysis and cultural alignment for{" "}
-            <span className="text-primary font-semibold">{dashboardData.fullName}</span>.
+            <span className="text-primary font-semibold">{evaluation.candidateName}</span>.
           </p>
         </div>
       </FadeInUp>
@@ -59,16 +68,16 @@ export default function CultureFitPage() {
               Cultural Dimensions
             </h2>
             <div className="ml-auto text-sm text-on-surface-variant">
-              Overall: <span className="text-2xl font-black text-on-surface ml-1">{cultureFitData.overallScore}</span>/10
+              Overall: <span className="text-2xl font-black text-on-surface ml-1">{overallScore}</span>/10
             </div>
           </div>
           <div className="flex flex-wrap justify-center gap-8">
-            {cultureFitData.dimensions.map((dim) => (
+            {derivedDimensions.map((dim) => (
               <ScoreRing key={dim.name} score={dim.score} label={dim.name} />
             ))}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-8">
-            {cultureFitData.dimensions.map((dim) => (
+            {derivedDimensions.map((dim) => (
               <div key={dim.name} className="text-center">
                 <p className="text-xs text-on-surface-variant leading-relaxed">
                   {dim.description}
@@ -90,8 +99,7 @@ export default function CultureFitPage() {
           </div>
           <StaggerContainer className="space-y-6" delayStart={0} staggerInterval={0.1}>
             {cultureFitData.behavioralHighlights.map((item, i) => (
-              <FadeInUp key={i}>
-                <div className="bg-surface-container-high rounded-xl p-6 border border-outline-variant/10">
+                <div key={i} className="bg-surface-container-high rounded-xl p-6 border border-outline-variant/10">
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="text-sm font-bold text-primary italic flex-1 mr-4">
                       &quot;{item.question}&quot;
@@ -108,7 +116,6 @@ export default function CultureFitPage() {
                     {item.response}
                   </p>
                 </div>
-              </FadeInUp>
             ))}
           </StaggerContainer>
         </div>

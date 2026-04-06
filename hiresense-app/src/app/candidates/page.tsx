@@ -13,8 +13,8 @@ import {
   FadeInUp,
   ScaleIn,
 } from "@/components/motion/MotionPrimitives";
-import { candidatesData } from "@/data/mockData";
-import { FloatingChatButton } from "@/components/dashboard/FloatingChatButton";
+import { useEvaluation, EvaluationData } from "@/lib/useEvaluation";
+import { CandidateReport } from "@/components/candidates/CandidateReport";
 
 const statusStyles = {
   shortlisted: "bg-secondary/10 text-secondary",
@@ -30,15 +30,36 @@ const statusLabels = {
 
 export default function CandidatesPage() {
   const router = useRouter();
+  const evaluation = useEvaluation();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [selectedCandidate, setSelectedCandidate] = useState<EvaluationData | null>(null);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
-  const filtered = candidatesData.candidates.filter((c) => {
+  const candidatesList = evaluation.evalHistory.map((e) => ({
+    id: e._id || e.createdAt,
+    name: e.candidateName || "Candidate",
+    role: e.sessionTitle || "Role",
+    interviewDate: new Date(e.createdAt || Date.now()).toLocaleDateString(),
+    topSkills: Array.isArray(e.strengths) ? e.strengths.slice(0, 3) : [],
+    score: e.score || 0,
+    status: ((e.score || 0) >= 8 ? "shortlisted" : ((e.score || 0) >= 5 ? "under-review" : "rejected")) as keyof typeof statusStyles,
+    avatar: (e.candidateName || "C").charAt(0).toUpperCase(),
+    // Keep the raw evaluation data for the report
+    raw: e,
+  }));
+
+  const filtered = candidatesList.filter((c) => {
     const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase())
       || c.topSkills.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesFilter = filterStatus === "all" || c.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
+
+  const handleCandidateClick = (raw: EvaluationData) => {
+    setSelectedCandidate(raw);
+    setIsReportOpen(true);
+  };
 
   return (
     <PageTransition>
@@ -53,7 +74,7 @@ export default function CandidatesPage() {
                   Candidates
                 </h1>
                 <p className="text-on-surface-variant mt-2 text-lg">
-                  {candidatesData.totalApplicants} applicants · {candidatesData.openPositions} open positions
+                  {candidatesList.length} total applicant records
                 </p>
               </div>
               <Button onClick={() => router.push("/interview")} className="flex items-center gap-2">
@@ -100,7 +121,7 @@ export default function CandidatesPage() {
               {filtered.map((candidate) => (
                 <ScaleIn key={candidate.id}>
                   <div
-                    onClick={() => router.push("/dashboard")}
+                    onClick={() => handleCandidateClick(candidate.raw)}
                     className="bg-surface-container-low rounded-xl p-5 border border-outline-variant/10 hover-lift cursor-pointer group flex items-center gap-5"
                   >
                     {/* Avatar */}
@@ -159,7 +180,14 @@ export default function CandidatesPage() {
           </FadeInUp>
         </StaggerContainer>
       </main>
-      <FloatingChatButton />
+
+      {/* Candidate Report Drawer */}
+      <CandidateReport
+        candidate={selectedCandidate}
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        myScore={evaluation.hireabilityScore}
+      />
     </PageTransition>
   );
 }

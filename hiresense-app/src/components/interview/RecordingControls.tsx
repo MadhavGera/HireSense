@@ -11,9 +11,10 @@ interface RecordingControlsProps {
   onSkip?: () => void;
   onSubmit?: () => void;
   question?: string;
+  sessionTitle?: string;
 }
 
-export function RecordingControls({ onSkip, onSubmit, question }: RecordingControlsProps) {
+export function RecordingControls({ onSkip, onSubmit, question, sessionTitle }: RecordingControlsProps) {
   const { toast } = useToast();
   const { user } = useUser();
   const [inputMode, setInputMode] = useState<"voice" | "type">("voice");
@@ -93,11 +94,12 @@ export function RecordingControls({ onSkip, onSubmit, question }: RecordingContr
 
     try {
       const formData = new FormData();
+      const candidateName = user?.fullName || user?.firstName || "Anonymous";
       if (user?.id) {
         formData.append("userId", user.id);
       }
-      formData.append("candidateName", "Alex Rivera"); // Use dynamic context if available
-      formData.append("sessionTitle", "Frontend Engineering - Medium");
+      formData.append("candidateName", candidateName);
+      formData.append("sessionTitle", sessionTitle || "AI Interview Session");
       if (question) formData.append("question", question);
 
       if (inputMode === "voice" && audioBlob) {
@@ -106,7 +108,7 @@ export function RecordingControls({ onSkip, onSubmit, question }: RecordingContr
         formData.append("textAnswer", textInput);
       }
 
-      const response = await fetch("/api/backend/evaluate", {
+      const response = await fetch("http://localhost:5000/api/evaluate", {
         method: "POST",
         body: formData,
       });
@@ -124,7 +126,7 @@ export function RecordingControls({ onSkip, onSubmit, question }: RecordingContr
 
       const data = await response.json();
       console.log("Evaluation Result:", data);
-      
+
       // Save for dashboard hydration
       if (data && data.data) {
         localStorage.setItem("latestEvaluation", JSON.stringify(data.data));

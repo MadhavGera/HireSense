@@ -9,9 +9,8 @@ import {
   CheckCircle, CircleDot, Circle, Headset, LogOut,
   Volume2, Moon, Globe, Shield, ChevronRight,
 } from "lucide-react";
-import { SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignUpButton, Show, UserButton, useUser } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
-import { profileImages, interviewData } from "@/data/mockData";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,32 +49,6 @@ const statusConfig = {
   },
 };
 
-/* ─── Notification data ──────────────────────────────────────────────────── */
-
-const notifications = [
-  {
-    id: "1",
-    title: "Interview Complete",
-    message: "Your Sr. Architect interview has been analyzed.",
-    time: "2 min ago",
-    unread: true,
-  },
-  {
-    id: "2",
-    title: "New Recommendation",
-    message: "AI Coach has new tips for improving communication.",
-    time: "1 hour ago",
-    unread: true,
-  },
-  {
-    id: "3",
-    title: "Weekly Report Ready",
-    message: "Your performance summary for this week is available.",
-    time: "Yesterday",
-    unread: false,
-  },
-];
-
 /* ─── Settings data ──────────────────────────────────────────────────────── */
 
 const settingsItems = [
@@ -104,46 +77,9 @@ export function TopNavBar({ variant, onExit, onSupport }: TopNavBarProps) {
   const { toast } = useToast();
   const router = useRouter();
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [readNotifications, setReadNotifications] = useState<Set<string>>(new Set());
-
-  const notifRef = useRef<HTMLDivElement>(null);
-  const settingsRef = useRef<HTMLDivElement>(null);
-
-  // Close dropdowns on outside click
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
-        setShowNotifications(false);
-      }
-      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
-        setShowSettings(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const unreadCount = notifications.filter((n) => n.unread && !readNotifications.has(n.id)).length;
-
-  const handleNotificationClick = (id: string, title: string) => {
-    setReadNotifications((prev) => new Set(prev).add(id));
-    toast(`Opened: ${title}`, "info");
-    setShowNotifications(false);
-  };
-
-  const handleMarkAllRead = () => {
-    setReadNotifications(new Set(notifications.map((n) => n.id)));
-    toast("All notifications marked as read", "success");
-  };
+  const { user } = useUser();
 
   // Nav links all have real routes now, no need for handleNavClick
-
-  const handleSettingClick = () => {
-    setShowSettings(false);
-    router.push("/settings");
-  };
 
   if (variant === "interview") {
     return (
@@ -164,7 +100,7 @@ export function TopNavBar({ variant, onExit, onSupport }: TopNavBarProps) {
             </Link>
             <div className="h-4 w-px bg-outline-variant/30 hidden md:block" />
             <span className="hidden md:inline font-headline font-bold tracking-tight text-on-surface">
-              {interviewData.sessionTitle}
+              Interview Session
             </span>
           </div>
 
@@ -172,7 +108,7 @@ export function TopNavBar({ variant, onExit, onSupport }: TopNavBarProps) {
             <div className="flex items-center gap-1.5 lg:gap-2 bg-surface-variant/40 px-3 lg:px-4 py-1.5 rounded-full">
               <Clock className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary" />
               <span className="font-headline font-bold text-xs lg:text-base tracking-tight text-on-surface">
-                {interviewData.timer}
+                Live
               </span>
             </div>
             <div className="flex items-center gap-2 lg:gap-3">
@@ -183,11 +119,17 @@ export function TopNavBar({ variant, onExit, onSupport }: TopNavBarProps) {
                 <Settings className="w-5 h-5" />
               </button>
               <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full overflow-hidden border border-outline-variant/30 ml-2">
-                <img
-                  src={interviewData.profileImage}
-                  alt="User profile"
-                  className="w-full h-full object-cover"
-                />
+                {user?.imageUrl ? (
+                  <img
+                    src={user.imageUrl}
+                    alt="User profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">
+                    {user?.firstName?.[0] || "?"}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -215,7 +157,7 @@ export function TopNavBar({ variant, onExit, onSupport }: TopNavBarProps) {
                   Interview Progress
                 </h2>
                 <p className="font-body text-sm font-medium text-on-surface-variant">
-                  {interviewData.completionPercent}% Completed
+                  In Progress
                 </p>
               </div>
               <button
@@ -228,27 +170,7 @@ export function TopNavBar({ variant, onExit, onSupport }: TopNavBarProps) {
 
             {/* Progress Nodes */}
             <nav className="flex-1 overflow-y-auto space-y-1 py-4">
-              {interviewData.progress.map((step) => {
-                const config = statusConfig[step.status as keyof typeof statusConfig];
-                const { Icon } = config;
-                return (
-                  <div
-                    key={step.label}
-                    className={cn(
-                      "flex items-center gap-3 p-3 mx-4 transition-all duration-300 ease-in-out cursor-default",
-                      config.classes
-                    )}
-                  >
-                    <Icon
-                      className={cn("w-5 h-5", config.iconClass)}
-                      fill={config.fill ? "currentColor" : "none"}
-                    />
-                    <span className="font-body text-sm font-medium">
-                      {step.label}
-                    </span>
-                  </div>
-                );
-              })}
+              {[]}
             </nav>
 
             {/* Bottom Actions */}
@@ -288,11 +210,11 @@ export function TopNavBar({ variant, onExit, onSupport }: TopNavBarProps) {
     <header className="fixed top-0 w-full z-50 flex justify-between items-center px-8 h-16 bg-surface shadow-[0_0_40px_rgba(25,37,64,0.08)]">
       <Link
         href="/dashboard"
-        className="text-2xl font-black tracking-tighter text-on-surface font-headline"
+        className="text-2xl font-black tracking-tighter text-on-surface font-headline flex-shrink-0"
       >
         HireSense
       </Link>
-      <nav className="hidden md:flex space-x-8 h-full items-center">
+      <nav className="hidden md:flex space-x-8 h-full items-center absolute left-1/2 -translate-x-1/2">
         {dashboardLinks.map((link) => {
           const isActive = pathname === link.href || (link.href !== "/dashboard" && pathname.startsWith(link.href));
           return (
@@ -313,109 +235,16 @@ export function TopNavBar({ variant, onExit, onSupport }: TopNavBarProps) {
       </nav>
       <div className="flex items-center gap-6">
         <div className="flex gap-4">
-          {/* Notifications */}
-          <div ref={notifRef} className="relative">
-            <button
-              onClick={() => { setShowNotifications(!showNotifications); setShowSettings(false); }}
-              className="relative text-primary cursor-pointer hover:text-on-surface transition-colors p-1"
-            >
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-error text-[10px] font-bold text-white rounded-full flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-
-            <AnimatePresence>
-              {showNotifications && (
-                <motion.div
-                  variants={dropdownVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="absolute right-0 top-10 w-80 bg-surface-container-high border border-outline-variant/15 rounded-xl shadow-2xl overflow-hidden"
-                >
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant/10">
-                    <h3 className="text-sm font-bold text-on-surface font-headline">Notifications</h3>
-                    <button
-                      onClick={handleMarkAllRead}
-                      className="text-xs text-primary font-medium hover:underline"
-                    >
-                      Mark all read
-                    </button>
-                  </div>
-                  <div className="max-h-72 overflow-y-auto">
-                    {notifications.map((n) => {
-                      const isUnread = n.unread && !readNotifications.has(n.id);
-                      return (
-                        <div
-                          key={n.id}
-                          onClick={() => handleNotificationClick(n.id, n.title)}
-                          className={cn(
-                            "px-4 py-3 cursor-pointer hover:bg-surface-bright/50 transition-colors border-b border-outline-variant/5 last:border-0",
-                            isUnread && "bg-primary/[0.04]"
-                          )}
-                        >
-                          <div className="flex items-start gap-3">
-                            {isUnread && (
-                              <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                            )}
-                            <div className={!isUnread ? "ml-5" : ""}>
-                              <p className="text-sm font-semibold text-on-surface">{n.title}</p>
-                              <p className="text-xs text-on-surface-variant mt-0.5">{n.message}</p>
-                              <p className="text-[10px] text-on-surface-variant/60 mt-1">{n.time}</p>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {/* Notifications removed as per task request */}
 
           {/* Settings */}
-          <div ref={settingsRef} className="relative">
+          <div className="relative">
             <button
-              onClick={() => { setShowSettings(!showSettings); setShowNotifications(false); }}
+              onClick={() => router.push("/settings")}
               className="text-primary cursor-pointer hover:text-on-surface transition-colors p-1"
             >
               <Settings className="w-5 h-5" />
             </button>
-
-            <AnimatePresence>
-              {showSettings && (
-                <motion.div
-                  variants={dropdownVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="absolute right-0 top-10 w-72 bg-surface-container-high border border-outline-variant/15 rounded-xl shadow-2xl overflow-hidden"
-                >
-                  <div className="px-4 py-3 border-b border-outline-variant/10">
-                    <h3 className="text-sm font-bold text-on-surface font-headline">Settings</h3>
-                  </div>
-                  <div>
-                    {settingsItems.map((item) => (
-                      <div
-                        key={item.label}
-                        onClick={() => handleSettingClick()}
-                        className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface-bright/50 transition-colors border-b border-outline-variant/5 last:border-0"
-                      >
-                        <item.icon className="w-4 h-4 text-primary flex-shrink-0" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-on-surface">{item.label}</p>
-                          <p className="text-xs text-on-surface-variant">{item.description}</p>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-on-surface-variant/40" />
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
         </div>
 

@@ -12,9 +12,10 @@ import {
   ScaleIn,
   SlideInRight,
 } from "@/components/motion/MotionPrimitives";
-import { dashboardData } from "@/data/mockData";
+import { useEvaluation } from "@/lib/useEvaluation";
 
 export default function PerformancePage() {
+  const evaluation = useEvaluation();
   return (
     <StaggerContainer delayStart={0.05} staggerInterval={0.1}>
       <FadeInUp>
@@ -27,12 +28,12 @@ export default function PerformancePage() {
           delayStart={0}
           staggerInterval={0.08}
         >
-          {dashboardData.metrics.map((metric) => (
+          {evaluation.metricsList.map((metric) => (
             <ScaleIn key={metric.label}>
               <MetricCard
                 label={metric.label}
                 score={metric.score}
-                icon={metric.icon}
+                icon={metric.icon as "Terminal" | "AudioLines" | "Zap"}
                 barHeights={metric.barHeights}
                 barOpacities={metric.barOpacities}
               />

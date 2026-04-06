@@ -7,7 +7,6 @@ import {
   ArrowRight, TrendingUp, Clock, Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { dashboardData, reportsData, candidatesData } from "@/data/mockData";
 import { useEvaluation } from "@/lib/useEvaluation";
 import {
   StaggerContainer,
@@ -65,10 +64,19 @@ export default function OverviewPage() {
   }));
 
   // Area chart data from reports (reversed for chronological order)
-  const trendData = [...reportsData.reports].reverse().map(r => ({
-    date: r.date.split(',')[0],
-    score: r.score,
+  const trendData = [...evaluation.evalHistory].reverse().map((r: any) => ({
+    date: new Date(r.createdAt || Date.now()).toLocaleDateString(),
+    score: r.score || 0,
   }));
+
+  const totalInterviews = evaluation.evalHistory.length;
+  const recentConf = evaluation.metricsList.find(m => m.label === "Confidence")?.score || 0;
+  
+  let improvementRate = "0%";
+  if (totalInterviews >= 2) {
+    const diff = (evaluation.evalHistory[0].score || 0) - (evaluation.evalHistory[1].score || 0);
+    improvementRate = diff > 0 ? `+${diff.toFixed(1)}` : `${diff.toFixed(1)}`;
+  }
 
   return (
     <StaggerContainer delayStart={0.05} staggerInterval={0.1}>
@@ -105,28 +113,28 @@ export default function OverviewPage() {
             {
               label: "Hireability Score",
               value: `${evaluation.hireabilityScore}/10`,
-              sub: dashboardData.percentile,
+              sub: "Overall average",
               icon: Target,
               accent: "text-primary",
             },
             {
               label: "Interviews Taken",
-              value: reportsData.totalInterviews,
-              sub: `Avg ${reportsData.averageScore}/10`,
+              value: totalInterviews,
+              sub: `Avg ${evaluation.hireabilityScore}/10`,
               icon: Clock,
               accent: "text-tertiary",
             },
             {
               label: "Improvement Rate",
-              value: reportsData.improvementRate,
-              sub: "vs. last month",
+              value: improvementRate,
+              sub: "vs. previous session",
               icon: TrendingUp,
               accent: "text-secondary",
             },
             {
-              label: "Candidate Rank",
-              value: `#2 / ${candidatesData.totalApplicants}`,
-              sub: "96th percentile",
+              label: "Recent Confidence",
+              value: `${recentConf}/10`,
+              sub: "Latest metric score",
               icon: BarChart3,
               accent: "text-primary",
             },
@@ -254,30 +262,39 @@ export default function OverviewPage() {
             </Link>
           </div>
           <div className="space-y-3">
-            {reportsData.reports.slice(0, 3).map((report) => (
-              <div
-                key={report.id}
-                onClick={() => router.push("/dashboard/performance")}
-                className="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-bright/50 cursor-pointer transition-colors group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm font-black text-primary">{report.score}</span>
+            {evaluation.evalHistory.slice(0, 3).map((report: any, idx: number) => {
+              const dateStr = new Date(report.createdAt || Date.now()).toLocaleDateString();
+              const strList = Array.isArray(report.strengths) 
+                ? report.strengths 
+                : typeof report.strengths === 'string' ? report.strengths.split(',') : [];
+              return (
+                <div
+                  key={report._id || idx}
+                  onClick={() => router.push("/dashboard/performance")}
+                  className="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-bright/50 cursor-pointer transition-colors group"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm font-black text-primary">{report.score || 0}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-on-surface group-hover:text-primary transition-colors truncate">
+                      {report.sessionTitle || "Interview Session"}
+                    </p>
+                    <p className="text-xs text-on-surface-variant">{dateStr}</p>
+                  </div>
+                  <div className="flex gap-1.5">
+                    {strList.slice(0, 2).map((s: string, idx: number) => (
+                      <span key={idx} className="text-[10px] px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant truncate max-w-[80px]">
+                        {s.trim()}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-on-surface group-hover:text-primary transition-colors truncate">
-                    {report.title}
-                  </p>
-                  <p className="text-xs text-on-surface-variant">{report.date} · {report.duration}</p>
-                </div>
-                <div className="flex gap-1.5">
-                  {report.strengths.slice(0, 2).map((s) => (
-                    <span key={s} className="text-[10px] px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface-variant">
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
+              );
+            })}
+            {evaluation.evalHistory.length === 0 && (
+              <p className="text-sm text-on-surface-variant text-center py-4">No recent activity found. Start a new interview!</p>
+            )}
           </div>
         </div>
       </FadeInUp>

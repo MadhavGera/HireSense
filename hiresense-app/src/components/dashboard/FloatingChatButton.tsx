@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { MessageSquare, X, Send, Bot, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUser } from "@clerk/nextjs";
 
 interface ChatMessage {
   id: string;
@@ -11,23 +12,18 @@ interface ChatMessage {
   timestamp: string;
 }
 
-const initialMessages: ChatMessage[] = [
-  {
-    id: "1",
-    role: "ai",
-    text: "Hi Alex! 👋 I'm your AI Interview Coach. I can help you review your performance, suggest improvements, or answer questions about your analytics. How can I help?",
-    timestamp: "Just now",
-  },
-];
+const STORAGE_KEY = "hiresense_chat_messages";
+const OPEN_KEY = "hiresense_chat_open";
 
 const aiResponses: Record<string, string> = {
   default:
     "That's a great question! Based on your interview data, I'd recommend focusing on reducing filler words and strengthening your system design explanations. Want me to elaborate on either topic?",
   score:
-    "Your hireability score of 8.5/10 puts you in the top 4% of candidates for this role. Your strongest area is Technical Depth (9.0), while Communication (7.2) has the most room for growth.",
-  tips: "Here are my top 3 tips: 1) Replace 'um' with short pauses—it sounds more confident. 2) Structure answers using the STAR method. 3) Practice explaining Virtual DOM concepts without jargon first.",
+    "Your hireability score puts you among the top candidates for this role. Check the Performance tab on your dashboard for a complete breakdown of Technical Depth, Communication, and Confidence metrics.",
+  tips: "Here are my top 3 tips: 1) Replace 'um' with short pauses—it sounds more confident. 2) Structure answers using the STAR method. 3) Practice explaining complex concepts without jargon first.",
   practice:
-    "I'd suggest practicing with these focus areas: Virtual DOM reconciliation, React Fiber architecture, and system design for micro-frontends. Would you like me to generate practice questions?",
+    "I'd suggest practicing with these focus areas: system architecture, data structures, and behavioral scenarios. Head to the Interview page to generate a fresh AI-powered question tailored to your level!",
+  help: "I can help with: reviewing your scores, suggesting improvement tips, recommending practice topics, and answering questions about your analytics. Just ask!",
 };
 
 function getAiResponse(input: string): string {
@@ -38,21 +34,71 @@ function getAiResponse(input: string): string {
     return aiResponses.tips;
   if (lower.includes("practice") || lower.includes("prepare") || lower.includes("question"))
     return aiResponses.practice;
+  if (lower.includes("what") && lower.includes("can"))
+    return aiResponses.help;
   return aiResponses.default;
 }
 
 export function FloatingChatButton() {
+  const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Load persisted state on mount
+  useEffect(() => {
+    try {
+      const savedMessages = localStorage.getItem(STORAGE_KEY);
+      const savedOpen = localStorage.getItem(OPEN_KEY);
+      if (savedMessages) {
+        const parsed = JSON.parse(savedMessages);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        }
+      }
+      if (savedOpen === "true") {
+        setIsOpen(true);
+      }
+    } catch (e) {}
+    setHydrated(true);
+  }, []);
+
+  // Inject a welcome message if no messages exist yet (after hydration)
+  useEffect(() => {
+    if (!hydrated) return;
+    if (messages.length === 0) {
+      const firstName = user?.firstName || "there";
+      const welcomeMsg: ChatMessage = {
+        id: "welcome-1",
+        role: "ai",
+        text: `Hi ${firstName}! 👋 I'm your AI Interview Coach. I can help you review your performance, suggest improvements, or answer questions about your analytics. How can I help?`,
+        timestamp: "Just now",
+      };
+      setMessages([welcomeMsg]);
+    }
+  }, [hydrated, user?.firstName]);
+
+  // Persist messages whenever they change
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  }, [messages, hydrated]);
+
+  // Persist open/closed state
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(OPEN_KEY, String(isOpen));
+  }, [isOpen, hydrated]);
+
+  // Auto-scroll
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, isTyping]);
 
-  const handleSend = () => {
+  const handleSend = useCallback(() => {
     const text = inputValue.trim();
     if (!text) return;
 
@@ -67,7 +113,6 @@ export function FloatingChatButton() {
     setInputValue("");
     setIsTyping(true);
 
-    // Simulate AI thinking delay
     setTimeout(() => {
       const aiMsg: ChatMessage = {
         id: crypto.randomUUID(),
@@ -78,6 +123,16 @@ export function FloatingChatButton() {
       setMessages((prev) => [...prev, aiMsg]);
       setIsTyping(false);
     }, 1200 + Math.random() * 800);
+  }, [inputValue]);
+
+  const handleClearChat = () => {
+    const firstName = user?.firstName || "there";
+    setMessages([{
+      id: "welcome-1",
+      role: "ai",
+      text: `Hi ${firstName}! 👋 Chat cleared. How can I help you today?`,
+      timestamp: "Just now",
+    }]);
   };
 
   return (
@@ -103,12 +158,21 @@ export function FloatingChatButton() {
                   <p className="text-xs text-secondary">Online</p>
                 </div>
               </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright rounded-lg transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handleClearChat}
+                  className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright rounded-lg transition-colors text-[10px] font-bold uppercase tracking-wider"
+                  title="Clear chat"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-bright rounded-lg transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Messages */}

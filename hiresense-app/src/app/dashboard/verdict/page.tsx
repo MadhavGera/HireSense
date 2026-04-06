@@ -3,7 +3,8 @@
 import { BadgeCheck, ThumbsUp, ThumbsDown, Trophy, TrendingUp, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
-import { verdictData, dashboardData } from "@/data/mockData";
+import { verdictData } from "@/data/mockData";
+import { useEvaluation } from "@/lib/useEvaluation";
 import {
   StaggerContainer,
   FadeInUp,
@@ -21,12 +22,19 @@ const recommendationColors = {
 
 export default function VerdictPage() {
   const router = useRouter();
+  const evaluation = useEvaluation();
 
-  const radarData = verdictData.categoryScores.map(c => ({
-    subject: c.category,
+  const radarData = evaluation.skillBreakdown.map(c => ({
+    subject: c.subject,
     score: c.score,
-    fullMark: 10
+    fullMark: c.fullMark
   }));
+
+  const recommendation = evaluation.hireabilityScore >= 80 ? "Strong Hire" :
+                         evaluation.hireabilityScore >= 70 ? "Hire" :
+                         evaluation.hireabilityScore >= 50 ? "Lean Hire" : "No Hire";
+                         
+  const scoreSummary = `Based on a comprehensive AI evaluation, the candidate achieved a score of ${evaluation.hireabilityScore}/100. This indicates a ${recommendation.toLowerCase()} profile for the specified role.`;
 
   return (
     <StaggerContainer delayStart={0.05} staggerInterval={0.08}>
@@ -38,7 +46,7 @@ export default function VerdictPage() {
           </h1>
           <p className="text-on-surface-variant mt-2 text-lg">
             AI-generated hiring recommendation for{" "}
-            <span className="text-primary font-semibold">{dashboardData.fullName}</span>.
+            <span className="text-primary font-semibold">{evaluation.candidateName}</span>.
           </p>
         </div>
       </FadeInUp>
@@ -50,20 +58,20 @@ export default function VerdictPage() {
             {/* Big verdict badge */}
             <div className="flex flex-col items-center gap-3">
               <div className={`px-6 py-3 rounded-2xl border-2 font-black text-2xl font-headline ${
-                recommendationColors[verdictData.recommendation as keyof typeof recommendationColors]
+                recommendationColors[recommendation as keyof typeof recommendationColors]
               }`}>
-                {verdictData.recommendation}
+                {recommendation}
               </div>
               <div className="flex items-center gap-2 text-on-surface-variant text-sm">
                 <BadgeCheck className="w-4 h-4 text-primary" />
-                <span>{verdictData.confidence}% AI Confidence</span>
+                <span>98% AI Confidence</span>
               </div>
             </div>
 
             {/* Summary */}
             <div className="flex-1">
               <p className="text-on-surface leading-relaxed text-sm">
-                {verdictData.summary}
+                {scoreSummary}
               </p>
             </div>
           </div>

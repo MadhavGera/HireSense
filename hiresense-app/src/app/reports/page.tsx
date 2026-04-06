@@ -15,7 +15,7 @@ import {
   ScaleIn,
 } from "@/components/motion/MotionPrimitives";
 import { Button } from "@/components/ui/Button";
-import { FloatingChatButton } from "@/components/dashboard/FloatingChatButton";
+
 
 export default function ReportsPage() {
   const router = useRouter();
@@ -240,7 +240,7 @@ export default function ReportsPage() {
           </FadeInUp>
         </StaggerContainer>
       </main>
-      <FloatingChatButton />
+
     </PageTransition>
   );
 }

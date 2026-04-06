@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
 import {
   User, Bell, Moon, Globe, Shield, Link2,
   Calendar, MessageSquare, Database, ExternalLink,
@@ -14,8 +15,7 @@ import {
   StaggerContainer,
   FadeInUp,
 } from "@/components/motion/MotionPrimitives";
-import { settingsData } from "@/data/mockData";
-import { FloatingChatButton } from "@/components/dashboard/FloatingChatButton";
+
 
 const integrationIcons: Record<string, React.ElementType> = {
   Calendar,
@@ -49,11 +49,48 @@ function Toggle({
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const [prefs, setPrefs] = useState(settingsData.preferences);
-  const [integrations, setIntegrations] = useState(settingsData.integrations);
+  const { user } = useUser();
+  const [prefs, setPrefs] = useState<Record<string, any>>({
+    emailNotifications: true,
+    interviewReminders: true,
+    weeklyDigest: false,
+    darkMode: true,
+    soundEffects: true,
+    autoSave: true,
+    language: "English (US)",
+  });
+  const [integrations, setIntegrations] = useState([
+    { name: "Google Calendar", icon: "Calendar", connected: true },
+    { name: "Slack", icon: "MessageSquare", connected: false },
+    { name: "Greenhouse", icon: "Database", connected: true },
+    { name: "LinkedIn", icon: "ExternalLink", connected: false },
+  ]);
 
-  const togglePref = (key: keyof typeof prefs) => {
-    setPrefs((p) => ({ ...p, [key]: !p[key] }));
+  useEffect(() => {
+    const savedPrefs = localStorage.getItem("hiresense_prefs");
+    const savedInts = localStorage.getItem("hiresense_integrations");
+    if (savedPrefs) {
+      try { 
+        const p = JSON.parse(savedPrefs);
+        setPrefs(p); 
+        if (p.darkMode) document.documentElement.classList.add("dark");
+        else document.documentElement.classList.remove("dark");
+      } catch (e) {}
+    }
+    if (savedInts) {
+      try { setIntegrations(JSON.parse(savedInts)); } catch (e) {}
+    }
+  }, []);
+
+  const togglePref = (key: string) => {
+    const newVal = !prefs[key];
+    if (key === "darkMode") {
+      if (newVal) document.documentElement.classList.add("dark");
+      else document.documentElement.classList.remove("dark");
+    }
+    toast(`${key.replace(/([A-Z])/g, " $1").trim()} is now ${newVal ? "On" : "Off"}`, "info");
+    
+    setPrefs((p) => ({ ...p, [key]: newVal }));
   };
 
   const toggleIntegration = (index: number) => {
@@ -68,7 +105,15 @@ export default function SettingsPage() {
   };
 
   const handleSave = () => {
+    localStorage.setItem("hiresense_prefs", JSON.stringify(prefs));
+    localStorage.setItem("hiresense_integrations", JSON.stringify(integrations));
     toast("Settings saved successfully!", "success");
+  };
+
+  const profileData = {
+    firstName: user?.firstName || "",
+    lastName: user?.lastName || "",
+    emailAddress: user?.primaryEmailAddress?.emailAddress || "",
   };
 
   return (
@@ -102,15 +147,16 @@ export default function SettingsPage() {
                 <h2 className="text-lg font-bold font-headline text-on-surface">Profile</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(settingsData.profile).map(([key, value]) => (
+                {Object.entries(profileData).map(([key, value]) => (
                   <div key={key}>
                     <label className="text-xs text-on-surface-variant uppercase tracking-wider font-semibold block mb-1.5">
                       {key.replace(/([A-Z])/g, " $1").trim()}
                     </label>
                     <input
                       type="text"
-                      defaultValue={value}
-                      className="w-full bg-surface-container-highest/60 text-on-surface text-sm rounded-xl px-4 py-2.5 border border-outline-variant/10 focus:outline-none focus:border-primary/40 transition-colors"
+                      value={value || ""}
+                      readOnly
+                      className="w-full bg-surface-container-highest/60 text-on-surface text-sm rounded-xl px-4 py-2.5 border border-outline-variant/10 focus:outline-none focus:border-primary/40 transition-colors opacity-70 cursor-not-allowed"
                     />
                   </div>
                 ))}
@@ -223,7 +269,7 @@ export default function SettingsPage() {
           </FadeInUp>
         </StaggerContainer>
       </main>
-      <FloatingChatButton />
+
     </PageTransition>
   );
 }

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { dashboardData } from "@/data/mockData";
+import { useUser } from "@clerk/nextjs";
 
 export interface EvaluationData {
+  _id?: string;
   candidateName?: string;
   sessionTitle?: string;
   score?: number;
@@ -24,79 +25,103 @@ export interface EvaluationData {
   audioFilePath?: string;
   question?: string;
   transcription?: string;
+  createdAt?: string;
+  evaluationJSON?: any;
 }
 
 export function useEvaluation() {
-  const [evalData, setEvalData] = useState<EvaluationData | null>(null);
+  const { user, isLoaded } = useUser();
+  const [evalHistory, setEvalHistory] = useState<EvaluationData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const raw = localStorage.getItem("latestEvaluation");
-    if (raw) {
+    async function fetchHistory() {
+      if (!isLoaded) return;
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        setEvalData(JSON.parse(raw));
-      } catch (e) {
-        console.error("Failed to parse latestEvaluation:", e);
+        const res = await fetch(`http://localhost:5000/api/history/${user.id}`);
+        const result = await res.json();
+        if (result.success && result.data) {
+          setEvalHistory(result.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch evaluation history:", err);
+      } finally {
+        setIsLoading(false);
       }
     }
-  }, []);
 
-  const data = evalData || ({} as Partial<EvaluationData>);
+    fetchHistory();
+  }, [user, isLoaded]);
 
-  const candidateName = data.candidateName || dashboardData.candidateName;
-  const rawScore = data.score || data.overallScore || dashboardData.hireabilityScore;
-  const hireabilityScore = typeof rawScore === "number" ? Number(rawScore.toFixed(1)) : rawScore;
+  // Use the most recent evaluation as the primary one, or fallback logic
+  const latestData = evalHistory.length > 0 ? evalHistory[0] : ({} as Partial<EvaluationData>);
+  const evalJSON = latestData.evaluationJSON || {};
+
+  const candidateName = user ? user.firstName || user.fullName : "Candidate";
   
-  // Transform metrics object to array
-  const rawMetrics = data.metrics || {};
+  // Averages across history
+  const validScores = evalHistory.map(e => e.score || 0).filter(s => s > 0);
+  const avgScore = validScores.length > 0 
+    ? validScores.reduce((a, b) => a + b, 0) / validScores.length 
+    : 0;
+
+  const hireabilityScore = Number(avgScore.toFixed(1));
+  
+  const rawMetrics = latestData.metrics || evalJSON.metrics || {};
   const metricsList = [
-    { label: "Technical Depth", score: rawMetrics.technicalDepth || 8.0, icon: "Terminal" },
-    { label: "Communication", score: rawMetrics.communication || 7.5, icon: "AudioLines" },
-    { label: "Confidence", score: rawMetrics.confidence || 8.0, icon: "Zap" },
+    { label: "Technical Depth", score: rawMetrics.technicalDepth || 0, icon: "Terminal" as const, barHeights: [2, 4, 3, 6, 7], barOpacities: [20, 40, 60, 80, 100] },
+    { label: "Communication", score: rawMetrics.communication || 0, icon: "AudioLines" as const, barHeights: [4, 5, 2, 3, 4], barOpacities: [20, 40, 60, 80, 40] },
+    { label: "Confidence", score: rawMetrics.confidence || 0, icon: "Zap" as const, barHeights: [2, 3, 6, 5, 8], barOpacities: [20, 40, 60, 80, 100] },
   ];
 
-  // Radar logic requires skillBreakdown
   const skillBreakdown = [
-    { subject: "Architecture", score: (rawMetrics.technicalDepth || 8) * 10, fullMark: 100 },
-    { subject: "DSA", score: (rawMetrics.problemSolving || 7.2) * 10, fullMark: 100 },
-    { subject: "React", score: (rawMetrics.technicalDepth || 9) * 10, fullMark: 100 },
-    { subject: "Soft Skills", score: (rawMetrics.communication || 6.8) * 10, fullMark: 100 },
-    { subject: "Security", score: 60, fullMark: 100 }, // static fallback for chart bounds
+    { subject: "Architecture", score: (rawMetrics.technicalDepth || 0) * 10, fullMark: 100 },
+    { subject: "DSA", score: (rawMetrics.problemSolving || 0) * 10, fullMark: 100 },
+    { subject: "React", score: (rawMetrics.technicalDepth || 0) * 10, fullMark: 100 },
+    { subject: "Soft Skills", score: (rawMetrics.communication || 0) * 10, fullMark: 100 },
+    { subject: "Security", score: 60, fullMark: 100 },
   ];
 
   // Map strengths
   let strengthsText = "";
-  if (Array.isArray(data.strengths)) strengthsText = data.strengths.join(", ");
-  else strengthsText = data.strengths || dashboardData.questionBreakdown.strengths;
+  if (Array.isArray(latestData.strengths)) strengthsText = latestData.strengths.join(", ");
+  else strengthsText = latestData.strengths || "";
 
   // Map improvements
   let improvementsText = "";
-  const imps = data.improvements || data.weaknesses;
+  const imps = latestData.improvements || latestData.weaknesses || evalJSON.improvements || evalJSON.weaknesses;
   if (Array.isArray(imps)) improvementsText = imps.join(", ");
-  else improvementsText = imps || dashboardData.questionBreakdown.improvements;
+  else improvementsText = imps || "";
 
   // Map Next Steps
-  const nextStepsRaw = data.actionableSuggestions || [];
-  const defaultNextSteps = dashboardData.nextSteps;
-  const nextSteps = nextStepsRaw.length > 0 ? nextStepsRaw.map((suggestion, idx) => ({
+  const nextStepsRaw = latestData.actionableSuggestions || evalJSON.actionableSuggestions || [];
+  const nextSteps = nextStepsRaw.map((suggestion: string, idx: number) => ({
     icon: (idx % 3 === 0 ? "Target" : idx % 3 === 1 ? "Zap" : "Brain") as any,
     title: `Suggestion ${idx + 1}`,
     description: suggestion,
-  })) : defaultNextSteps;
+  }));
 
   return {
+    isLoading,
+    evalHistory,
     candidateName,
     hireabilityScore,
     metricsList,
     skillBreakdown,
     questionBreakdown: {
-      currentQuestion: dashboardData.questionBreakdown.currentQuestion,
-      totalQuestions: dashboardData.questionBreakdown.totalQuestions,
-      questionText: data.question || dashboardData.questionBreakdown.questionText,
-      transcript: data.transcription || dashboardData.questionBreakdown.transcript,
+      currentQuestion: evalHistory.length,
+      totalQuestions: evalHistory.length,
+      questionText: latestData.question || "",
+      transcript: latestData.transcription || "",
       strengths: strengthsText,
       improvements: improvementsText,
     },
-    improvedPitch: data.improvedPitch || data.improvedAnswer || dashboardData.aiPitch,
+    improvedPitch: latestData.improvedPitch || latestData.improvedAnswer || evalJSON.improvedPitch || evalJSON.improvedAnswer || "",
     nextSteps,
   };
 }

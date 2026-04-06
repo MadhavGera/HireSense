@@ -8,7 +8,6 @@ import { AIVisualizer } from "@/components/interview/AIVisualizer";
 import { RecordingControls } from "@/components/interview/RecordingControls";
 import { AIStatusIndicator } from "@/components/interview/AIStatusIndicator";
 import { AICoachTip } from "@/components/interview/AICoachTip";
-import { interviewData } from "@/data/mockData";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 
@@ -18,43 +17,24 @@ interface InterviewClientProps {
 }
 
 export function InterviewClient({ dynamicQuestion, dynamicTopic }: InterviewClientProps) {
-  const [questionIndex, setQuestionIndex] = useState(0);
   const router = useRouter();
   const { toast } = useToast();
 
-  const isDynamic = !!dynamicQuestion;
-
-  const currentQuestion = isDynamic
-    ? {
-        id: "dynamic-1",
-        topic: dynamicTopic || "AI Generated Topic",
-        question: dynamicQuestion!,
-        highlightedWords: [] as string[],
-      }
-    : interviewData.questions[questionIndex];
+  const currentQuestion = {
+    id: "dynamic-1",
+    topic: dynamicTopic || "AI Generated Topic",
+    question: dynamicQuestion || "Loading question...",
+    highlightedWords: [] as string[],
+  };
 
   const handleSkip = () => {
     toast("Question skipped.", "info");
-    if (isDynamic) {
-      router.push("/dashboard");
-    } else if (questionIndex < interviewData.questions.length - 1) {
-      setQuestionIndex((prev) => prev + 1);
-    } else {
-      toast("Interview complete!", "success");
-      router.push("/dashboard");
-    }
+    router.push("/dashboard");
   };
 
   const handleSubmit = () => {
     toast("Answer submitted successfully!", "success");
-    if (isDynamic) {
-      router.push("/dashboard");
-    } else if (questionIndex < interviewData.questions.length - 1) {
-      setQuestionIndex((prev) => prev + 1);
-    } else {
-      toast("Interview complete!", "success");
-      router.push("/dashboard");
-    }
+    router.push("/dashboard");
   };
 
   const handleExit = () => {
@@ -66,9 +46,7 @@ export function InterviewClient({ dynamicQuestion, dynamicTopic }: InterviewClie
     toast("Connecting to support team...", "info");
   };
 
-  const progressPercent = isDynamic
-    ? 100
-    : Math.round(((questionIndex + 1) / interviewData.questions.length) * 100);
+  const progressPercent = 100;
 
   return (
     <>
@@ -103,7 +81,7 @@ export function InterviewClient({ dynamicQuestion, dynamicTopic }: InterviewClie
           </div>
 
           {/* Bottom Control Panel */}
-          <RecordingControls onSkip={handleSkip} onSubmit={handleSubmit} question={currentQuestion.question} />
+          <RecordingControls onSkip={handleSkip} onSubmit={handleSubmit} question={currentQuestion.question} sessionTitle={currentQuestion.topic} />
         </main>
 
         {/* Right Side Panel (AI Indicators) */}

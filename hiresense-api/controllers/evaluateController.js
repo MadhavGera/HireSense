@@ -18,21 +18,26 @@ exports.processEvaluation = async (req, res) => {
 
     const question = req.body.question || "Explain the Virtual DOM and why React uses it.";
     const evaluationResult = await evaluateAnswer(question, transcription);
-    console.log("Returned evaluationResult:", evaluationResult);
+    console.log("✅ Returned evaluationResult:", JSON.stringify(evaluationResult, null, 2));
 
-    const safeScore = evaluationResult?.overallScore || evaluationResult?.score || 5;
+    // Use ?? (nullish coalescing) so a legit score of 0 isn't treated as falsy
+    const rawScore = evaluationResult?.overallScore ?? evaluationResult?.score ?? 2;
+    const safeScore = (typeof rawScore === 'number' && !isNaN(rawScore)) ? rawScore : 2;
+    
     const safeStrengths = Array.isArray(evaluationResult?.strengths) && evaluationResult.strengths.length > 0
       ? evaluationResult.strengths.join(", ")
-      : (evaluationResult?.strengths || "Adequate baseline response.");
+      : (evaluationResult?.strengths || "No specific strengths identified.");
     const safeImprovements = Array.isArray(evaluationResult?.weaknesses) && evaluationResult.weaknesses.length > 0
       ? evaluationResult.weaknesses.join(", ")
-      : (evaluationResult?.weaknesses || evaluationResult?.improvements || "Expand upon your technical reasoning.");
-    const safePitch = evaluationResult?.improvedAnswer || evaluationResult?.improvedPitch || "Consider detailing the underlying mechanics completely.";
+      : (evaluationResult?.weaknesses || evaluationResult?.improvements || "Answer needs significant improvement.");
+    const safePitch = evaluationResult?.improvedAnswer || evaluationResult?.improvedPitch || "A strong answer would directly address the question with specific details.";
+
+    console.log(`📊 Score: ${safeScore}/10 | User: ${req.body.userId || 'anonymous'}`);
 
     const newRecord = new Evaluation({
       userId: req.body.userId || "anonymous",
-      candidateName: req.body.candidateName || "Alex Rivera",
-      sessionTitle: req.body.sessionTitle || "Frontend Engineering - Medium",
+      candidateName: req.body.candidateName || "Anonymous",
+      sessionTitle: req.body.sessionTitle || "AI Interview Session",
       question: question,
       transcription: transcription || req.body.textAnswer,
       evaluationJSON: evaluationResult,
@@ -43,21 +48,22 @@ exports.processEvaluation = async (req, res) => {
       audioFilePath: "memory-buffer",
     });
 
-    // ✅ Non-fatal DB save
+    // ✅ Non-fatal DB save — but log the full error
     let savedRecord = null;
     try {
       savedRecord = await newRecord.save();
+      console.log("💾 Record saved to DB with ID:", savedRecord._id);
     } catch (dbErr) {
       console.warn("⚠️ DB save failed (non-fatal):", dbErr.message);
+      console.warn("⚠️ Failed record data:", { userId: req.body.userId, score: safeScore, question });
     }
 
-    const payload = savedRecord ? savedRecord.toObject() : { ...evaluationResult, candidateName: req.body.candidateName };
-    // Mix in the things that Mongoose didn't save so the dashboard can render them natively
+    const payload = savedRecord ? savedRecord.toObject() : { ...evaluationResult, candidateName: req.body.candidateName, score: safeScore };
     return res.status(200).json({
       success: true,
       data: {
         ...payload,
-        metrics: evaluationResult.metrics || { technicalDepth: 8, communication: 7, confidence: 8 },
+        metrics: evaluationResult.metrics || { technicalDepth: 2, communication: 2, confidence: 2 },
         actionableSuggestions: evaluationResult.actionableSuggestions || [],
         transcription: transcription || req.body.textAnswer,
         question: question

@@ -11,7 +11,9 @@ import {
   Mic,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { dashboardData, profileImages } from "@/data/mockData";
+import { useUser } from "@clerk/nextjs";
+import { dashboardData } from "@/data/mockData"; // Keeping minimal mock data for static array, or re-define static array
+import { useEvaluation } from "@/lib/useEvaluation";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 
@@ -23,23 +25,32 @@ const iconMap = {
   BadgeCheck,
 };
 
+const sidebarNavItems = [
+  { label: "Overview", href: "/dashboard", icon: "LayoutDashboard" },
+  { label: "Performance", href: "/dashboard/performance", icon: "BarChart3" },
+  { label: "Skill Gap", href: "/dashboard/skill-gap", icon: "Brain" },
+  { label: "Culture Fit", href: "/dashboard/culture-fit", icon: "Users" },
+  { label: "Verdict", href: "/dashboard/verdict", icon: "BadgeCheck" },
+];
+
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useUser();
+  const evaluation = useEvaluation();
 
   const handleExport = () => {
     const report = {
-      candidate: dashboardData.fullName,
-      role: dashboardData.role,
-      hireabilityScore: dashboardData.hireabilityScore,
-      percentile: dashboardData.percentile,
-      metrics: dashboardData.metrics.map((m) => ({
+      candidate: user ? user.fullName || user.firstName : "Candidate",
+      hireabilityScore: evaluation.hireabilityScore,
+      metrics: evaluation.metricsList.map((m) => ({
         label: m.label,
         score: m.score,
       })),
-      skillBreakdown: dashboardData.skillBreakdown,
-      aiPitch: dashboardData.aiPitch,
+      skillBreakdown: evaluation.skillBreakdown,
+      aiPitch: evaluation.improvedPitch,
+      history: evaluation.evalHistory,
       generatedAt: new Date().toISOString(),
     };
 
@@ -49,7 +60,7 @@ export function Sidebar() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `hiresense-report-${dashboardData.fullName.replace(/\s+/g, "-").toLowerCase()}.json`;
+    a.download = `hiresense-report-${(user?.firstName || "user").toLowerCase()}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -67,20 +78,25 @@ export function Sidebar() {
 
   return (
     <aside className="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 bg-surface-container-low flex flex-col p-4 z-40">
-      {/* Session Info */}
       <div className="mb-6 px-2">
         <div className="flex items-center gap-3 mb-2">
-          <img
-            alt="Interview Session"
-            className="w-10 h-10 rounded-lg object-cover"
-            src={profileImages.session}
-          />
+          {user?.imageUrl ? (
+            <img
+              alt="User Avatar"
+              className="w-10 h-10 rounded-lg object-cover"
+              src={user.imageUrl}
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+              <Users className="w-5 h-5 text-primary" />
+            </div>
+          )}
           <div>
             <div className="text-on-surface font-bold font-headline text-sm leading-tight">
-              {dashboardData.role}
+              Software Engineer
             </div>
             <div className="text-on-surface-variant text-xs">
-              {dashboardData.fullName}
+              {user ? user.fullName || user.firstName : "Loading..."}
             </div>
           </div>
         </div>
@@ -97,7 +113,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1">
-        {dashboardData.sidebarNavItems.map((item) => {
+        {sidebarNavItems.map((item) => {
           const Icon = iconMap[item.icon as keyof typeof iconMap];
           const isActive = getIsActive(item.href);
           return (

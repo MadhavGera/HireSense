@@ -2,7 +2,8 @@
 
 import { BookOpen, ExternalLink, AlertTriangle, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { skillGapData, dashboardData } from "@/data/mockData";
+import { skillGapData } from "@/data/mockData";
+import { useEvaluation } from "@/lib/useEvaluation";
 import {
   StaggerContainer,
   FadeInUp,
@@ -18,11 +19,12 @@ const priorityColors = {
 };
 
 export default function SkillGapPage() {
-  const chartData = skillGapData.required.map(s => ({
-    name: s.skill,
-    current: s.current,
-    required: s.required,
-    gap: s.gap
+  const evaluation = useEvaluation();
+  const chartData = evaluation.skillBreakdown.map(s => ({
+    name: s.subject,
+    current: s.score,
+    required: s.fullMark * 0.8,
+    gap: Math.max(0, s.fullMark * 0.8 - s.score),
   }));
 
   const renderCustomLegend = () => (
@@ -47,8 +49,8 @@ export default function SkillGapPage() {
             Skill Gap Analysis
           </h1>
           <p className="text-on-surface-variant mt-2 text-lg">
-            Comparing {dashboardData.fullName}&apos;s skills against the{" "}
-            <span className="text-primary font-semibold">{dashboardData.role}</span> requirements.
+            Comparing {evaluation.candidateName}&apos;s skills against the{" "}
+            <span className="text-primary font-semibold">requirements</span>.
           </p>
         </div>
       </FadeInUp>
@@ -107,11 +109,11 @@ export default function SkillGapPage() {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-8">
-            {skillGapData.required.filter(s => s.gap > 0).map((skill) => (
-              <div key={skill.skill} className="flex items-center gap-3 p-3 rounded-lg bg-error/5 border border-error/10">
+            {chartData.filter(s => s.gap > 0).map((skill) => (
+              <div key={skill.name} className="flex items-center gap-3 p-3 rounded-lg bg-error/5 border border-error/10">
                 <AlertTriangle className="w-4 h-4 text-error" />
                 <span className="text-xs text-error/90 font-medium">
-                  <span className="font-bold">{skill.skill}</span>: {skill.gap}% gap — improvement needed
+                  <span className="font-bold">{skill.name}</span>: {skill.gap}% gap — improvement needed
                 </span>
               </div>
             ))}

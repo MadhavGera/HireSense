@@ -3,6 +3,7 @@ import { ClerkProvider, SignInButton, SignUpButton, Show, UserButton } from "@cl
 import "./globals.css";
 import { PageTransitionProvider } from "@/components/motion/PageTransitionProvider";
 import { ToastProvider } from "@/components/ui/Toast";
+import { PersistentChat } from "@/components/dashboard/PersistentChat";
 
 export const metadata: Metadata = {
   title: "HireSense | AI-Powered Interview Intelligence",
@@ -21,6 +22,7 @@ export default function RootLayout({
         <ClerkProvider>
           <ToastProvider>
             <PageTransitionProvider>{children}</PageTransitionProvider>
+            <PersistentChat />
           </ToastProvider>
         </ClerkProvider>
       </body>
