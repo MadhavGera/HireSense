@@ -12,17 +12,33 @@ import { interviewData } from "@/data/mockData";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 
-export function InterviewClient() {
+interface InterviewClientProps {
+  dynamicQuestion?: string | null;
+  dynamicTopic?: string | null;
+}
+
+export function InterviewClient({ dynamicQuestion, dynamicTopic }: InterviewClientProps) {
   const [questionIndex, setQuestionIndex] = useState(0);
   const router = useRouter();
   const { toast } = useToast();
 
-  const currentQuestion = interviewData.questions[questionIndex];
+  const isDynamic = !!dynamicQuestion;
+
+  const currentQuestion = isDynamic
+    ? {
+        id: "dynamic-1",
+        topic: dynamicTopic || "AI Generated Topic",
+        question: dynamicQuestion!,
+        highlightedWords: [] as string[],
+      }
+    : interviewData.questions[questionIndex];
 
   const handleSkip = () => {
-    toast("Question skipped. Loading next question...", "info");
-    if (questionIndex < interviewData.questions.length - 1) {
-      setQuestionIndex(prev => prev + 1);
+    toast("Question skipped.", "info");
+    if (isDynamic) {
+      router.push("/dashboard");
+    } else if (questionIndex < interviewData.questions.length - 1) {
+      setQuestionIndex((prev) => prev + 1);
     } else {
       toast("Interview complete!", "success");
       router.push("/dashboard");
@@ -30,9 +46,11 @@ export function InterviewClient() {
   };
 
   const handleSubmit = () => {
-    toast("Answer submitted successfully! Loading next question...", "success");
-    if (questionIndex < interviewData.questions.length - 1) {
-      setQuestionIndex(prev => prev + 1);
+    toast("Answer submitted successfully!", "success");
+    if (isDynamic) {
+      router.push("/dashboard");
+    } else if (questionIndex < interviewData.questions.length - 1) {
+      setQuestionIndex((prev) => prev + 1);
     } else {
       toast("Interview complete!", "success");
       router.push("/dashboard");
@@ -48,7 +66,9 @@ export function InterviewClient() {
     toast("Connecting to support team...", "info");
   };
 
-  const progressPercent = Math.round(((questionIndex + 1) / interviewData.questions.length) * 100);
+  const progressPercent = isDynamic
+    ? 100
+    : Math.round(((questionIndex + 1) / interviewData.questions.length) * 100);
 
   return (
     <>
@@ -73,10 +93,10 @@ export function InterviewClient() {
           </div>
           <div className="flex-1 flex items-center justify-center p-12">
             <div className="flex flex-col items-center">
-              <QuestionDisplay 
-                question={currentQuestion.question} 
-                highlightedWords={currentQuestion.highlightedWords} 
-                topic={currentQuestion.topic} 
+              <QuestionDisplay
+                question={currentQuestion.question}
+                highlightedWords={currentQuestion.highlightedWords}
+                topic={currentQuestion.topic}
               />
               <AIVisualizer />
             </div>

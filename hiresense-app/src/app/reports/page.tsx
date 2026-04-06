@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import {
-  FileText, Calendar, Clock, ChevronRight,
-  TrendingUp, Award, BarChart3,
+  FileText, Calendar, Code, Award, Mic,
+  TrendingUp, BarChart3, Sparkles, ChevronRight,
 } from "lucide-react";
 import { TopNavBar } from "@/components/layout/TopNavBar";
 import { PageTransition } from "@/components/motion/PageTransition";
@@ -14,12 +14,8 @@ import {
   FadeInUp,
   ScaleIn,
 } from "@/components/motion/MotionPrimitives";
-import { reportsData } from "@/data/mockData";
+import { Button } from "@/components/ui/Button";
 import { FloatingChatButton } from "@/components/dashboard/FloatingChatButton";
-
-const statusStyles = {
-  completed: "bg-secondary/10 text-secondary",
-};
 
 export default function ReportsPage() {
   const router = useRouter();
@@ -52,119 +48,193 @@ export default function ReportsPage() {
   }, [user, isLoaded]);
 
   const totalInterviews = history.length;
-  const averageScore = history.length > 0 
-    ? (history.reduce((acc, curr) => acc + curr.score, 0) / history.length).toFixed(1) 
+  const averageScore = history.length > 0
+    ? (history.reduce((acc, curr) => acc + (curr.score || 0), 0) / history.length).toFixed(1)
     : "0";
+  const bestScore = history.length > 0
+    ? Math.max(...history.map((h) => h.score || 0))
+    : 0;
 
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 8) return "text-secondary";
+    if (score >= 5) return "text-primary";
+    return "text-error";
+  };
+
+  const getScoreRingColor = (score: number) => {
+    if (score >= 8) return "from-secondary/20 to-secondary/5 border-secondary/30";
+    if (score >= 5) return "from-primary/20 to-primary/5 border-primary/30";
+    return "from-error/20 to-error/5 border-error/30";
+  };
 
   return (
     <PageTransition>
       <TopNavBar variant="dashboard" />
-      <main className="max-w-6xl mx-auto pt-24 px-8 pb-12">
+      <main className="max-w-7xl mx-auto pt-24 px-6 md:px-8 pb-16">
         <StaggerContainer delayStart={0.05} staggerInterval={0.08}>
           {/* Header */}
           <FadeInUp>
-            <div className="mb-10">
-              <h1 className="text-3xl font-black font-headline text-on-surface tracking-tight">
-                Interview Reports
-              </h1>
-              <p className="text-on-surface-variant mt-2 text-lg">
-                Review past interviews, track your progress, and identify trends.
-              </p>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+              <div>
+                <h1 className="text-3xl md:text-4xl font-black font-headline text-on-surface tracking-tight">
+                  Interview History
+                </h1>
+                <p className="text-on-surface-variant mt-2 text-lg">
+                  Track your progress across every mock session.
+                </p>
+              </div>
+              <Button
+                onClick={() => router.push("/interview")}
+                size="lg"
+                className="flex items-center gap-2 shadow-lg hover:shadow-primary/20 self-start md:self-auto"
+              >
+                <Mic className="w-5 h-5" />
+                New Interview
+              </Button>
             </div>
           </FadeInUp>
 
           {/* Stats Row */}
           <FadeInUp>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <StaggerContainer
+              className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10"
+              delayStart={0}
+              staggerInterval={0.06}
+            >
               {[
-                { label: "Total Interviews", value: totalInterviews, icon: FileText },
-                { label: "Average Score", value: `${averageScore}/10`, icon: Award },
-                { label: "Best Category", value: "Technical", icon: BarChart3 },
-                { label: "Improvement", value: "+12%", icon: TrendingUp },
+                { label: "Total Sessions", value: totalInterviews, icon: FileText, accent: "text-primary" },
+                { label: "Average Score", value: `${averageScore}/10`, icon: Award, accent: "text-tertiary" },
+                { label: "Best Score", value: `${bestScore}/10`, icon: TrendingUp, accent: "text-secondary" },
+                { label: "Active Streak", value: `${Math.min(totalInterviews, 7)}d`, icon: Sparkles, accent: "text-primary" },
               ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="bg-surface-container-low rounded-xl p-5 border border-outline-variant/10"
-                >
-                  <stat.icon className="w-5 h-5 text-primary mb-2" />
-                  <p className="text-2xl font-black font-headline text-on-surface">
-                    {stat.value}
-                  </p>
-                  <p className="text-xs text-on-surface-variant mt-1">{stat.label}</p>
-                </div>
+                <ScaleIn key={stat.label}>
+                  <div className="bg-surface-container-low rounded-xl p-5 border border-outline-variant/10 hover-lift">
+                    <stat.icon className={`w-5 h-5 ${stat.accent} mb-3`} />
+                    <p className="text-2xl font-black font-headline text-on-surface">
+                      {stat.value}
+                    </p>
+                    <p className="text-xs text-on-surface-variant mt-1 font-medium">{stat.label}</p>
+                  </div>
+                </ScaleIn>
               ))}
-            </div>
+            </StaggerContainer>
           </FadeInUp>
 
-          {/* Reports List */}
+          {/* Reports Grid */}
           <FadeInUp>
             {isLoading ? (
-              <div className="text-center py-20 text-on-surface-variant">Loading history...</div>
+              <div className="flex flex-col items-center justify-center py-24 gap-4">
+                <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+                <p className="text-on-surface-variant text-sm font-medium">Loading your history...</p>
+              </div>
             ) : history.length === 0 ? (
-              <div className="text-center py-20 text-on-surface-variant border border-dashed border-outline-variant/30 rounded-xl">
-                No past interviews found.
+              /* Empty State */
+              <div className="flex flex-col items-center justify-center py-24 gap-6 border border-dashed border-outline-variant/20 rounded-2xl bg-surface-container-low/30">
+                <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <Mic className="w-10 h-10 text-primary" />
+                </div>
+                <div className="text-center max-w-md">
+                  <h3 className="text-xl font-bold font-headline text-on-surface mb-2">
+                    No interviews found
+                  </h3>
+                  <p className="text-on-surface-variant text-sm leading-relaxed">
+                    Start your first mock interview today and track your improvement over time.
+                    Each session generates a detailed AI analysis.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => router.push("/interview")}
+                  size="lg"
+                  className="flex items-center gap-2 mt-2"
+                >
+                  <Mic className="w-5 h-5" />
+                  Start First Interview
+                </Button>
               </div>
             ) : (
-              <StaggerContainer className="space-y-4" delayStart={0} staggerInterval={0.06}>
+              /* Grid of Cards */
+              <StaggerContainer
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+                delayStart={0}
+                staggerInterval={0.06}
+              >
                 {history.map((report) => {
-                  const strengthArray = typeof report.strengths === "string" 
-                    ? report.strengths.split(",").map((s: string) => s.trim()).slice(0, 3) 
+                  const strengthArray = typeof report.strengths === "string"
+                    ? report.strengths.split(",").map((s: string) => s.trim()).filter(Boolean).slice(0, 2)
                     : [];
-                  
+                  const score = report.score || 0;
+
                   return (
-                  <ScaleIn key={report._id}>
-                    <div
-                      onClick={() => router.push("/dashboard")}
-                      className="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10 hover-lift cursor-pointer group flex items-center gap-6"
-                    >
-                      {/* Score */}
-                      <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                          <span className="text-2xl font-black font-headline text-primary">
-                            {report.score}
-                          </span>
-                        </div>
-                        <span className="text-[10px] text-on-surface-variant uppercase tracking-wider">/10</span>
-                      </div>
+                    <ScaleIn key={report._id}>
+                      <div
+                        onClick={() => router.push("/dashboard")}
+                        className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10 hover-lift cursor-pointer group transition-all duration-300 flex flex-col gap-4 relative overflow-hidden"
+                      >
+                        {/* Subtle glow on hover */}
+                        <div className="absolute inset-0 bg-primary/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none" />
 
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-bold text-on-surface group-hover:text-primary transition-colors truncate">
-                          {report.sessionTitle || "Interview"}
-                        </h3>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-on-surface-variant">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {new Date(report.createdAt).toLocaleDateString()}
-                          </span>
-                          <span className="flex items-center gap-1 truncate max-w-[200px]">
-                            <Clock className="w-3 h-3" />
-                            {report.question || "Topic question"}
-                          </span>
-                        </div>
-                        <div className="flex gap-2 mt-2.5 flex-wrap">
-                          {strengthArray.map((s: string, i: number) => (
-                            <span
-                              key={i}
-                              className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary truncate max-w-[150px]"
-                            >
-                              {s}
+                        {/* Top Row: Score Circle + Title */}
+                        <div className="flex items-start gap-4 relative z-10">
+                          {/* Circular Score Indicator */}
+                          <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${getScoreRingColor(score)} border flex items-center justify-center flex-shrink-0`}>
+                            <span className={`text-xl font-black font-headline ${getScoreColor(score)}`}>
+                              {score}
                             </span>
-                          ))}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors truncate">
+                              {report.sessionTitle || "Mock Interview"}
+                            </h3>
+                            <div className="flex items-center gap-1.5 mt-1 text-xs text-on-surface-variant">
+                              <Calendar className="w-3 h-3" />
+                              <span>{formatDate(report.createdAt)}</span>
+                            </div>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-on-surface-variant opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-0 group-hover:translate-x-1 flex-shrink-0 mt-1" />
+                        </div>
+
+                        {/* Question/Topic */}
+                        <div className="relative z-10">
+                          <div className="flex items-start gap-2 text-xs text-on-surface-variant">
+                            <Code className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-primary/60" />
+                            <p className="line-clamp-2 leading-relaxed">
+                              {report.question || "General interview question"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Strength Tags */}
+                        {strengthArray.length > 0 && (
+                          <div className="flex gap-2 flex-wrap relative z-10">
+                            {strengthArray.map((s: string, i: number) => (
+                              <span
+                                key={i}
+                                className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary truncate max-w-[140px]"
+                              >
+                                {s}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Bottom: Status Badge */}
+                        <div className="flex items-center justify-between relative z-10 pt-2 border-t border-outline-variant/[0.07]">
+                          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-secondary/10 text-secondary uppercase tracking-wider">
+                            Completed
+                          </span>
+                          <span className="text-[10px] text-on-surface-variant">
+                            Score: {score}/10
+                          </span>
                         </div>
                       </div>
-
-                      {/* Status + Arrow */}
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className={`text-xs font-bold px-3 py-1 rounded-full capitalize bg-secondary/10 text-secondary`}>
-                          Completed
-                        </span>
-                        <ChevronRight className="w-5 h-5 text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    </div>
-                  </ScaleIn>
-                )})}
+                    </ScaleIn>
+                  );
+                })}
               </StaggerContainer>
             )}
           </FadeInUp>

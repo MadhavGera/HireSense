@@ -21,10 +21,10 @@ exports.processEvaluation = async (req, res) => {
     console.log("Returned evaluationResult:", evaluationResult);
 
     const safeScore = evaluationResult?.overallScore || evaluationResult?.score || 5;
-    const safeStrengths = Array.isArray(evaluationResult?.strengths)
+    const safeStrengths = Array.isArray(evaluationResult?.strengths) && evaluationResult.strengths.length > 0
       ? evaluationResult.strengths.join(", ")
       : (evaluationResult?.strengths || "Adequate baseline response.");
-    const safeImprovements = Array.isArray(evaluationResult?.weaknesses)
+    const safeImprovements = Array.isArray(evaluationResult?.weaknesses) && evaluationResult.weaknesses.length > 0
       ? evaluationResult.weaknesses.join(", ")
       : (evaluationResult?.weaknesses || evaluationResult?.improvements || "Expand upon your technical reasoning.");
     const safePitch = evaluationResult?.improvedAnswer || evaluationResult?.improvedPitch || "Consider detailing the underlying mechanics completely.";

@@ -12,6 +12,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api/evaluate", evaluateRoutes);
+app.post("/api/generate-question", require("./controllers/questionController").generateQuestion);
 app.get("/api/history/:userId", require("./controllers/evaluateController").getHistory);
 
 // Database Connection

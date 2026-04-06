@@ -59,3 +59,45 @@ exports.evaluateAnswer = async (question, transcription) => {
     };
   }
 };
+
+/**
+ * Generate Dynamic Interview Question using OpenRouter
+ */
+exports.generateDynamicQuestion = async (role, topic, difficulty) => {
+  const systemPrompt = `You are an expert technical interviewer. Generate one realistic, non-generic interview question based on:
+Role: ${role}
+Topic: ${topic}
+Difficulty: ${difficulty}
+Return only the question.`;
+
+  try {
+    if (!process.env.OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is missing");
+
+    const modelInfo = process.env.OPENROUTER_DEFAULT_MODEL || DEFAULT_MODEL;
+
+    const response = await axios.post(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        model: modelInfo,
+        messages: [
+          { role: "system", content: systemPrompt }
+        ]
+      },
+      {
+        headers: {
+          "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "HTTP-Referer": "http://localhost:5000",
+          "X-Title": "HireSense Dashboard",
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    let generatedQuestion = response.data.choices[0].message.content.trim();
+    return generatedQuestion;
+
+  } catch (error) {
+    console.error(`❌ Question Generation Error (OpenRouter):`, error?.response?.data || error.message);
+    return `Can you explain a complex problem you solved recently related to ${topic}?`;
+  }
+};

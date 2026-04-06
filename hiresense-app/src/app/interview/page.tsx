@@ -1,12 +1,28 @@
-import { InterviewClient } from "./InterviewClient";
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Interview Simulation | HireSense",
-  description:
-    "Practice your interview skills with AI-powered real-time feedback, voice analysis, and intelligent coaching.",
-};
+import { useState } from "react";
+import { InterviewSetup } from "@/components/interview/InterviewSetup";
+import { InterviewClient } from "./InterviewClient";
 
 export default function InterviewPage() {
-  return <InterviewClient />;
+  const [started, setStarted] = useState(false);
+  const [generatedQuestion, setGeneratedQuestion] = useState<string | null>(null);
+  const [generatedTopic, setGeneratedTopic] = useState<string | null>(null);
+
+  const handleStart = (question: string, topic: string) => {
+    setGeneratedQuestion(question);
+    setGeneratedTopic(topic);
+    setStarted(true);
+  };
+
+  if (!started) {
+    return <InterviewSetup onStart={handleStart} />;
+  }
+
+  return (
+    <InterviewClient
+      dynamicQuestion={generatedQuestion}
+      dynamicTopic={generatedTopic}
+    />
+  );
 }

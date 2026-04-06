@@ -9,9 +9,9 @@ const evaluationSchema = new mongoose.Schema(
     transcription: { type: String },
     evaluationJSON: { type: Object },
     score: { type: Number, required: true },
-    strengths: { type: String, required: true },
-    improvements: { type: String, required: true },
-    improvedPitch: { type: String, required: true },
+    strengths: { type: String, default: "No specific strengths identified." },
+    improvements: { type: String, default: "Expand upon your technical reasoning." },
+    improvedPitch: { type: String, default: "Consider elaborating further." },
     // A placeholder if we decide to store the actual file path or S3 URL
     audioFilePath: { type: String },
   },
