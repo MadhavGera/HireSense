@@ -210,9 +210,8 @@ export function LandingPage() {
                 <div className="flex-1">
                   <p className="text-sm font-bold text-on-surface mb-1">AI Interviewer</p>
                   <div className="rounded-xl bg-surface-container/80 p-4 border border-outline-variant/10">
-                    <p className="text-sm text-on-surface-variant leading-relaxed">
-                      &quot;Can you explain the difference between a stack and a queue? 
-                      Give me an example of when you&apos;d use each in a production system.&quot;
+                    <p className="text-sm text-on-surface-variant leading-relaxed text-center mx-auto">
+                      &quot;Can you explain the difference between a stack and a queue? Give me an example of when you&apos;d use each in a production system.&quot;
                     </p>
                   </div>
                 </div>

@@ -8,19 +8,14 @@ import {
 import { Button } from "@/components/ui/Button";
 import { FadeInUp, StaggerContainer } from "@/components/motion/MotionPrimitives";
 
-const ROLES = [
-  "Frontend Engineer",
-  "Backend Engineer",
-  "Full Stack",
-  "Data Scientist",
-] as const;
+const ROLE_TOPICS: Record<string, string[]> = {
+  "Frontend Engineer": ["React / Next.js", "CSS / UI Architecture", "Web Performance", "JavaScript Core", "Behavioral"],
+  "Backend Engineer": ["System Design", "Databases / SQL", "APIs & Microservices", "Data Structures & Algorithms", "Behavioral"],
+  "Full Stack": ["System Design", "React / Next.js", "Backend Fundamentals", "Data Structures & Algorithms", "Behavioral"],
+  "Data Scientist": ["Machine Learning", "Python / Pandas", "Statistics", "Data Structures & Algorithms", "Behavioral"],
+};
 
-const TOPICS = [
-  "React / Next.js",
-  "System Design",
-  "Data Structures & Algorithms",
-  "Behavioral",
-] as const;
+const ROLES = Object.keys(ROLE_TOPICS);
 
 const DIFFICULTIES = [
   "Junior",
@@ -34,7 +29,7 @@ interface InterviewSetupProps {
 
 export function InterviewSetup({ onStart }: InterviewSetupProps) {
   const [role, setRole] = useState<string>(ROLES[0]);
-  const [topic, setTopic] = useState<string>(TOPICS[0]);
+  const [topic, setTopic] = useState<string>(ROLE_TOPICS[ROLES[0]][0]);
   const [difficulty, setDifficulty] = useState<string>(DIFFICULTIES[1]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,7 +95,11 @@ export function InterviewSetup({ onStart }: InterviewSetupProps) {
                 <div className="relative">
                   <select
                     value={role}
-                    onChange={(e) => setRole(e.target.value)}
+                    onChange={(e) => {
+                      const newRole = e.target.value;
+                      setRole(newRole);
+                      setTopic(ROLE_TOPICS[newRole][0]);
+                    }}
                     className={selectClasses}
                     disabled={isGenerating}
                   >
@@ -124,7 +123,7 @@ export function InterviewSetup({ onStart }: InterviewSetupProps) {
                     className={selectClasses}
                     disabled={isGenerating}
                   >
-                    {TOPICS.map((t) => (
+                    {ROLE_TOPICS[role].map((t) => (
                       <option key={t} value={t}>{t}</option>
                     ))}
                   </select>
@@ -143,11 +142,10 @@ export function InterviewSetup({ onStart }: InterviewSetupProps) {
                       key={lvl}
                       onClick={() => setDifficulty(lvl)}
                       disabled={isGenerating}
-                      className={`py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
-                        difficulty === lvl
+                      className={`py-3 rounded-xl text-sm font-bold transition-all duration-200 ${difficulty === lvl
                           ? "bg-primary text-on-primary shadow-lg shadow-primary/20 scale-[1.02]"
                           : "bg-surface-container border border-outline-variant/20 hover:border-primary/30 text-on-surface-variant hover:text-on-surface"
-                      }`}
+                        }`}
                     >
                       {lvl}
                     </button>

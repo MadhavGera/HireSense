@@ -16,8 +16,8 @@ export function RadarChartWidget() {
       <h2 className="text-lg font-bold font-headline text-on-surface mb-6">
         Skill Breakdown
       </h2>
-      <div className="aspect-square relative">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="relative w-full aspect-square min-h-[250px] md:min-h-[300px] flex items-center justify-center">
+        <ResponsiveContainer width="99%" height="99%">
           <RadarChart
             data={skillBreakdown}
             cx="50%"

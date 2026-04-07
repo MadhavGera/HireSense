@@ -23,15 +23,22 @@ export function RecordingControls({ onSkip, onSubmit, question, sessionTitle }: 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [liveTranscript, setLiveTranscript] = useState("");
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const recognitionRef = useRef<any>(null);
 
   const toggleRecording = async () => {
     if (isRecording) {
       // Stop Recording
       if (mediaRecorderRef.current) {
         mediaRecorderRef.current.stop();
+      }
+      // Stop speech recognition (keep transcript visible for review)
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (_) { }
+        recognitionRef.current = null;
       }
       setIsRecording(false);
     } else {
@@ -62,7 +69,39 @@ export function RecordingControls({ onSkip, onSubmit, question, sessionTitle }: 
 
         mediaRecorder.start();
         setIsRecording(true);
-        setAudioBlob(null); // Clear previous state
+        setAudioBlob(null);
+        setLiveTranscript(""); // Fresh start
+
+        // ── Start Speech Recognition (real-time subtitles) ──────────
+        try {
+          const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+          if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = "en-US";
+
+            recognition.onresult = (e: any) => {
+              let transcript = "";
+              for (let i = 0; i < e.results.length; i++) {
+                transcript += e.results[i][0].transcript;
+              }
+              setLiveTranscript(transcript);
+            };
+
+            recognition.onerror = (e: any) => {
+              // "no-speech" and "aborted" are expected — don't spam the console
+              if (e.error !== "no-speech" && e.error !== "aborted") {
+                console.warn("SpeechRecognition error:", e.error);
+              }
+            };
+
+            recognition.start();
+            recognitionRef.current = recognition;
+          }
+        } catch (speechErr) {
+          console.warn("SpeechRecognition not supported:", speechErr);
+        }
       } catch (err) {
         console.error("Microphone Access Error:", err);
         alert("Microphone access denied or unavailable. Please check your browser permissions.");
@@ -147,6 +186,7 @@ export function RecordingControls({ onSkip, onSubmit, question, sessionTitle }: 
       } else {
         setAudioBlob(null);
       }
+      setLiveTranscript("");
     } catch (error: any) {
       clearTimeout(timeoutId);
       if (error.name === "AbortError") {
@@ -202,35 +242,47 @@ export function RecordingControls({ onSkip, onSubmit, question, sessionTitle }: 
             : "flex-[2] px-4 min-w-[200px] lg:px-8"
         )}>
           {inputMode === "voice" ? (
-            <button
-              onClick={toggleRecording}
-              className="group relative flex flex-col items-center gap-3"
-            >
-              <div
-                className={cn(
-                  "w-16 h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center transform group-hover:scale-105 transition-all duration-300",
-                  isRecording
-                    ? "bg-gradient-to-br from-error to-error-dim mic-glow-active"
-                    : "bg-gradient-to-br from-primary to-primary-container mic-glow"
-                )}
+            <div className="flex flex-col items-center gap-3">
+              <button
+                onClick={toggleRecording}
+                className="group relative flex flex-col items-center gap-3"
               >
-                <Mic
+                <div
                   className={cn(
-                    "w-6 h-6 lg:w-8 lg:h-8",
-                    isRecording ? "text-white" : "text-on-primary"
+                    "w-16 h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center transform group-hover:scale-105 transition-all duration-300",
+                    isRecording
+                      ? "bg-gradient-to-br from-error to-error-dim mic-glow-active"
+                      : "bg-gradient-to-br from-primary to-primary-container mic-glow"
                   )}
-                  fill="currentColor"
-                />
-              </div>
-              <span
-                className={cn(
-                  "text-[10px] lg:text-xs font-bold uppercase tracking-widest whitespace-nowrap",
-                  isRecording ? "text-error animate-pulse" : "text-primary hover:opacity-80 transition-opacity"
-                )}
-              >
-                {isRecording ? "Stop Recording" : (audioBlob ? "Re-Record Answer" : "Start Recording")}
-              </span>
-            </button>
+                >
+                  <Mic
+                    className={cn(
+                      "w-6 h-6 lg:w-8 lg:h-8",
+                      isRecording ? "text-white" : "text-on-primary"
+                    )}
+                    fill="currentColor"
+                  />
+                </div>
+                <span
+                  className={cn(
+                    "text-[10px] lg:text-xs font-bold uppercase tracking-widest whitespace-nowrap",
+                    isRecording ? "text-error animate-pulse" : "text-primary hover:opacity-80 transition-opacity"
+                  )}
+                >
+                  {isRecording ? "Stop Recording" : (audioBlob ? "Re-Record Answer" : "Start Recording")}
+                </span>
+              </button>
+
+              {/* ── Live Transcript Teleprompter ─────────────────────── */}
+              {liveTranscript && (
+                <div className="w-full max-w-3xl text-center p-5 md:p-6 bg-surface-container-high/80 backdrop-blur-md rounded-2xl border border-primary/20 shadow-xl mx-auto mt-4 transition-all duration-300 animate-fade-in leading-relaxed">
+                  <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-primary font-bold block mb-2 not-italic opacity-80">Live Transcript</span>
+                  <p className="text-on-surface italic text-base md:text-lg lg:text-xl font-medium">
+                    {liveTranscript}
+                  </p>
+                </div>
+              )}
+            </div>
           ) : (
             <div className="w-full max-w-2xl bg-surface-container-high border border-outline-variant/20 rounded-xl p-2 lg:p-3 shadow-inner">
               <textarea

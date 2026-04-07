@@ -154,8 +154,8 @@ export function CandidateReport({ candidate, isOpen, onClose, myScore }: Candida
                   <BarChart3 className="w-4 h-4 text-primary" />
                   <h3 className="text-sm font-bold text-on-surface">Score Comparison</h3>
                 </div>
-                <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="h-48 min-w-0">
+                  <ResponsiveContainer width="99%" height="99%">
                     <BarChart data={compareData} barGap={4}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                       <XAxis dataKey="metric" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -185,8 +185,8 @@ export function CandidateReport({ candidate, isOpen, onClose, myScore }: Candida
                   <Target className="w-4 h-4 text-tertiary" />
                   <h3 className="text-sm font-bold text-on-surface">Metric Breakdown</h3>
                 </div>
-                <div className="h-56">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="h-56 min-w-0">
+                  <ResponsiveContainer width="99%" height="99%">
                     <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
                       <PolarGrid stroke="rgba(255,255,255,0.08)" />
                       <PolarAngleAxis dataKey="subject" tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 11 }} />
