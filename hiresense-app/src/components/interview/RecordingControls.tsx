@@ -204,87 +204,91 @@ export function RecordingControls({ onSkip, onSubmit, question, sessionTitle, cu
   };
 
   return (
-    <div className="fixed bottom-0 left-0 w-full z-50 lg:static lg:w-auto p-4 md:p-6 lg:p-8 bg-surface lg:bg-transparent lg:glass-panel border-t border-outline-variant/10 shadow-[0_-20px_40px_rgba(0,0,0,0.5)] lg:shadow-none transition-transform duration-300">
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
-        {/* Left Controls / Toggle */}
-        <div className="flex-1 flex justify-start">
-          <div className="flex items-center bg-surface-container-lowest/40 p-1 rounded-full border border-outline-variant/20">
-            <button
-              onClick={() => setInputMode("voice")}
-              className={cn(
-                "flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-1.5 md:py-2 rounded-full text-[10px] sm:text-xs md:text-sm font-bold transition-all",
-                inputMode === "voice"
-                  ? "bg-primary text-on-primary shadow-lg"
-                  : "text-on-surface-variant hover:text-on-surface"
-              )}
-            >
-              <Mic className="w-3.5 h-3.5 md:w-4 md:h-4" />
-              <span className="hidden min-[400px]:inline">Voice</span>
-            </button>
-            <button
-              onClick={() => setInputMode("type")}
-              className={cn(
-                "flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-1.5 md:py-2 rounded-full text-[10px] sm:text-xs md:text-sm font-medium transition-all",
-                inputMode === "type"
-                  ? "bg-primary text-on-primary shadow-lg"
-                  : "text-on-surface-variant hover:text-on-surface"
-              )}
-            >
-              <Keyboard className="w-3.5 h-3.5 md:w-4 md:h-4" />
-              <span className="hidden min-[400px]:inline">Type</span>
-            </button>
+    <>
+      {/* ── Live Transcript — floats above the control bar ──────── */}
+      {inputMode === "voice" && liveTranscript && (
+        <div className="fixed bottom-[120px] left-0 w-full z-40 px-4 md:px-6 lg:static lg:w-auto lg:px-8 lg:pb-2 lg:z-auto">
+          <div className="max-w-3xl mx-auto text-center p-4 md:p-5 bg-surface-container-high/90 backdrop-blur-md rounded-2xl border border-primary/20 shadow-xl animate-fade-in leading-relaxed">
+            <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-primary font-bold block mb-2 opacity-80">Live Transcript</span>
+            <p className="text-on-surface italic text-sm md:text-base lg:text-lg font-medium">
+              {liveTranscript}
+            </p>
           </div>
         </div>
+      )}
 
-        {/* Center Area (Mic or Textarea) */}
-        <div className={cn(
-          "flex justify-center relative z-10 transition-all duration-300",
-          inputMode === "voice"
-            ? "flex-shrink-0 -translate-y-6 lg:-translate-y-12 px-2"
-            : "flex-[2] px-4 min-w-[200px] lg:px-8"
-        )}>
-          {inputMode === "voice" ? (
-            <div className="flex flex-col items-center gap-3">
+      {/* ── Bottom Control Bar ──────────────────────────────────── */}
+      <div className="fixed bottom-0 left-0 w-full z-50 lg:static lg:w-auto p-4 md:p-6 lg:p-8 bg-surface lg:bg-transparent lg:glass-panel border-t border-outline-variant/10 shadow-[0_-20px_40px_rgba(0,0,0,0.5)] lg:shadow-none transition-transform duration-300">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          {/* Left Controls / Toggle */}
+          <div className="flex-1 flex justify-start">
+            <div className="flex items-center bg-surface-container-lowest/40 p-1 rounded-full border border-outline-variant/20">
               <button
-                onClick={toggleRecording}
-                className="group relative flex flex-col items-center gap-3"
+                onClick={() => setInputMode("voice")}
+                className={cn(
+                  "flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-1.5 md:py-2 rounded-full text-[10px] sm:text-xs md:text-sm font-bold transition-all",
+                  inputMode === "voice"
+                    ? "bg-primary text-on-primary shadow-lg"
+                    : "text-on-surface-variant hover:text-on-surface"
+                )}
               >
-                <div
-                  className={cn(
-                    "w-16 h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center transform group-hover:scale-105 transition-all duration-300",
-                    isRecording
-                      ? "bg-gradient-to-br from-error to-error-dim mic-glow-active"
-                      : "bg-gradient-to-br from-primary to-primary-container mic-glow"
-                  )}
-                >
-                  <Mic
-                    className={cn(
-                      "w-6 h-6 lg:w-8 lg:h-8",
-                      isRecording ? "text-white" : "text-on-primary"
-                    )}
-                    fill="currentColor"
-                  />
-                </div>
-                <span
-                  className={cn(
-                    "text-[10px] lg:text-xs font-bold uppercase tracking-widest whitespace-nowrap",
-                    isRecording ? "text-error animate-pulse" : "text-primary hover:opacity-80 transition-opacity"
-                  )}
-                >
-                  {isRecording ? "Stop Recording" : (audioBlob ? "Re-Record Answer" : "Start Recording")}
-                </span>
+                <Mic className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <span className="hidden min-[400px]:inline">Voice</span>
               </button>
-
-              {/* ── Live Transcript Teleprompter ─────────────────────── */}
-              {liveTranscript && (
-                <div className="w-full max-w-3xl text-center p-5 md:p-6 bg-surface-container-high/80 backdrop-blur-md rounded-2xl border border-primary/20 shadow-xl mx-auto mt-4 transition-all duration-300 animate-fade-in leading-relaxed">
-                  <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-primary font-bold block mb-2 not-italic opacity-80">Live Transcript</span>
-                  <p className="text-on-surface italic text-base md:text-lg lg:text-xl font-medium">
-                    {liveTranscript}
-                  </p>
-                </div>
-              )}
+              <button
+                onClick={() => setInputMode("type")}
+                className={cn(
+                  "flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-1.5 md:py-2 rounded-full text-[10px] sm:text-xs md:text-sm font-medium transition-all",
+                  inputMode === "type"
+                    ? "bg-primary text-on-primary shadow-lg"
+                    : "text-on-surface-variant hover:text-on-surface"
+                )}
+              >
+                <Keyboard className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <span className="hidden min-[400px]:inline">Type</span>
+              </button>
             </div>
+          </div>
+
+          {/* Center Area (Mic or Textarea) */}
+          <div className={cn(
+            "flex justify-center relative z-10 transition-all duration-300",
+            inputMode === "voice"
+              ? "flex-shrink-0 -translate-y-4 lg:-translate-y-8 px-2"
+              : "flex-[2] px-4 min-w-[200px] lg:px-8"
+          )}>
+            {inputMode === "voice" ? (
+              <div className="flex flex-col items-center gap-2">
+                <button
+                  onClick={toggleRecording}
+                  className="group relative flex flex-col items-center gap-2"
+                >
+                  <div
+                    className={cn(
+                      "w-14 h-14 lg:w-16 lg:h-16 rounded-full flex items-center justify-center transform group-hover:scale-105 transition-all duration-300",
+                      isRecording
+                        ? "bg-gradient-to-br from-error to-error-dim mic-glow-active"
+                        : "bg-gradient-to-br from-primary to-primary-container mic-glow"
+                    )}
+                  >
+                    <Mic
+                      className={cn(
+                        "w-5 h-5 lg:w-6 lg:h-6",
+                        isRecording ? "text-white" : "text-on-primary"
+                      )}
+                      fill="currentColor"
+                    />
+                  </div>
+                  <span
+                    className={cn(
+                      "text-[10px] lg:text-xs font-bold uppercase tracking-widest whitespace-nowrap",
+                      isRecording ? "text-error animate-pulse" : "text-primary hover:opacity-80 transition-opacity"
+                    )}
+                  >
+                    {isRecording ? "Stop Recording" : (audioBlob ? "Re-Record Answer" : "Start Recording")}
+                  </span>
+                </button>
+              </div>
           ) : (
             <div className="w-full max-w-2xl bg-surface-container-high border border-outline-variant/20 rounded-xl p-2 lg:p-3 shadow-inner">
               <textarea
@@ -354,6 +358,7 @@ export function RecordingControls({ onSkip, onSubmit, question, sessionTitle, cu
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
