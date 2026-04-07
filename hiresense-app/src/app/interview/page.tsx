@@ -8,10 +8,12 @@ export default function InterviewPage() {
   const [started, setStarted] = useState(false);
   const [generatedQuestion, setGeneratedQuestion] = useState<string | null>(null);
   const [generatedTopic, setGeneratedTopic] = useState<string | null>(null);
+  const [customContext, setCustomContext] = useState<string | undefined>(undefined);
 
-  const handleStart = (question: string, topic: string) => {
+  const handleStart = (question: string, topic: string, context?: string) => {
     setGeneratedQuestion(question);
     setGeneratedTopic(topic);
+    setCustomContext(context);
     setStarted(true);
   };
 
@@ -23,6 +25,7 @@ export default function InterviewPage() {
     <InterviewClient
       dynamicQuestion={generatedQuestion}
       dynamicTopic={generatedTopic}
+      customContext={customContext}
     />
   );
 }

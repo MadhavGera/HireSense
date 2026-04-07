@@ -21,8 +21,12 @@ Do not include markdown formatting like \`\`\`json, return raw JSON only.`;
 /**
  * Evaluate Interview Answer using OpenRouter
  */
-exports.evaluateAnswer = async (question, transcription) => {
-  const userPrompt = `Question: ${question}\nCandidate's Answer: ${transcription}`;
+exports.evaluateAnswer = async (question, transcription, customContext = "") => {
+  let userPrompt = `Question: ${question}\nCandidate's Answer: ${transcription}`;
+
+  if (customContext) {
+    userPrompt += `\n\nCRITICAL: You have been provided with the candidate's background or target job description below. You MUST cross-reference their spoken answer with this context. In the 'weaknesses' or 'improvedAnswer' section, explicitly suggest a specific project, skill, or metric from this context that they SHOULD have mentioned to make their answer stronger.\n\nCandidate Context:\n${customContext}`;
+  }
 
   try {
     if (!process.env.OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is missing");
@@ -108,8 +112,12 @@ exports.evaluateAnswer = async (question, transcription) => {
 /**
  * Generate Dynamic Interview Question using OpenRouter
  */
-exports.generateDynamicQuestion = async (role, topic, difficulty) => {
-  const systemPrompt = `You are an expert technical hiring manager. Generate a single, highly specific interview question for a candidate applying for a ${difficulty} ${role} role, focusing specifically on ${topic}. Do NOT provide the answer, hints, or any introductory text. Return ONLY the raw question string.`;
+exports.generateDynamicQuestion = async (role, topic, difficulty, customContext = "") => {
+  let systemPrompt = `You are an expert technical hiring manager. Generate a single, highly specific interview question for a candidate applying for a ${difficulty} ${role} role, focusing specifically on ${topic}. Do NOT provide the answer, hints, or any introductory text. Return ONLY the raw question string.`;
+
+  if (customContext) {
+    systemPrompt += `\n\nUse the following resume or job description context to make the question hyper-personalized to their specific experience or the specific job requirements:\n${customContext}`;
+  }
 
   try {
     if (!process.env.OPENROUTER_API_KEY) throw new Error("OPENROUTER_API_KEY is missing");

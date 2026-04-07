@@ -2,13 +2,13 @@ const { generateDynamicQuestion } = require("../services/aiService");
 
 exports.generateQuestion = async (req, res) => {
   try {
-    const { role, topic, difficulty } = req.body;
+    const { role, topic, difficulty, customContext } = req.body;
 
     if (!role || !topic || !difficulty) {
       return res.status(400).json({ success: false, message: "Missing required fields (role, topic, difficulty)" });
     }
 
-    const question = await generateDynamicQuestion(role, topic, difficulty);
+    const question = await generateDynamicQuestion(role, topic, difficulty, customContext);
 
     return res.status(200).json({
       success: true,

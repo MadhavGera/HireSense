@@ -12,9 +12,10 @@ interface RecordingControlsProps {
   onSubmit?: () => void;
   question?: string;
   sessionTitle?: string;
+  customContext?: string;
 }
 
-export function RecordingControls({ onSkip, onSubmit, question, sessionTitle }: RecordingControlsProps) {
+export function RecordingControls({ onSkip, onSubmit, question, sessionTitle, customContext }: RecordingControlsProps) {
   const { toast } = useToast();
   const { user } = useUser();
   const [inputMode, setInputMode] = useState<"voice" | "type">("voice");
@@ -146,6 +147,7 @@ export function RecordingControls({ onSkip, onSubmit, question, sessionTitle }: 
       formData.append("candidateName", candidateName);
       formData.append("sessionTitle", sessionTitle || "AI Interview Session");
       if (question) formData.append("question", question);
+      if (customContext) formData.append("customContext", customContext);
 
       if (inputMode === "voice" && audioBlob) {
         formData.append("audio", audioBlob, "answer.webm");

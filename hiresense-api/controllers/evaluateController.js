@@ -17,7 +17,8 @@ exports.processEvaluation = async (req, res) => {
     }
 
     const question = req.body.question || "Explain the Virtual DOM and why React uses it.";
-    const evaluationResult = await evaluateAnswer(question, transcription);
+    const customContext = req.body.customContext || "";
+    const evaluationResult = await evaluateAnswer(question, transcription, customContext);
     console.log("✅ Returned evaluationResult:", JSON.stringify(evaluationResult, null, 2));
 
     // Use ?? (nullish coalescing) so a legit score of 0 isn't treated as falsy

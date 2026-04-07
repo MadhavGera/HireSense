@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   Briefcase, Brain, Sparkles, ChevronRight, Loader2,
-  ChevronDown,
+  ChevronDown, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { FadeInUp, StaggerContainer } from "@/components/motion/MotionPrimitives";
@@ -24,13 +24,14 @@ const DIFFICULTIES = [
 ] as const;
 
 interface InterviewSetupProps {
-  onStart: (question: string, topic: string) => void;
+  onStart: (question: string, topic: string, customContext?: string) => void;
 }
 
 export function InterviewSetup({ onStart }: InterviewSetupProps) {
   const [role, setRole] = useState<string>(ROLES[0]);
   const [topic, setTopic] = useState<string>(ROLE_TOPICS[ROLES[0]][0]);
   const [difficulty, setDifficulty] = useState<string>(DIFFICULTIES[1]);
+  const [customContext, setCustomContext] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,11 +42,11 @@ export function InterviewSetup({ onStart }: InterviewSetupProps) {
       const response = await fetch("http://localhost:5000/api/generate-question", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role, topic, difficulty }),
+        body: JSON.stringify({ role, topic, difficulty, customContext: customContext.trim() || undefined }),
       });
       const data = await response.json();
       if (data.success && data.data?.question) {
-        onStart(data.data.question, topic);
+        onStart(data.data.question, topic, customContext.trim() || undefined);
       } else {
         setError(data.message || "Failed to generate question. Please try again.");
         setIsGenerating(false);
@@ -151,6 +152,21 @@ export function InterviewSetup({ onStart }: InterviewSetupProps) {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Resume / JD Context (Optional) */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-xs font-bold text-on-surface uppercase tracking-widest">
+                  <FileText className="w-3.5 h-3.5 text-primary" /> Resume / Job Description
+                  <span className="text-on-surface-variant/50 font-medium normal-case tracking-normal ml-1">(optional)</span>
+                </label>
+                <textarea
+                  value={customContext}
+                  onChange={(e) => setCustomContext(e.target.value)}
+                  placeholder="Paste your resume summary or the target job description here for hyper-personalized questions and evaluation..."
+                  disabled={isGenerating}
+                  className="w-full h-32 bg-surface-container border border-outline-variant/20 rounded-xl px-4 py-3.5 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all font-medium placeholder:text-on-surface-variant/40 resize-none leading-relaxed"
+                />
               </div>
 
               {/* Error Message */}

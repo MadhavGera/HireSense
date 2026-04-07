@@ -14,9 +14,10 @@ import { useToast } from "@/components/ui/Toast";
 interface InterviewClientProps {
   dynamicQuestion?: string | null;
   dynamicTopic?: string | null;
+  customContext?: string;
 }
 
-export function InterviewClient({ dynamicQuestion, dynamicTopic }: InterviewClientProps) {
+export function InterviewClient({ dynamicQuestion, dynamicTopic, customContext }: InterviewClientProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -81,7 +82,7 @@ export function InterviewClient({ dynamicQuestion, dynamicTopic }: InterviewClie
           </div>
 
           {/* Bottom Control Panel */}
-          <RecordingControls onSkip={handleSkip} onSubmit={handleSubmit} question={currentQuestion.question} sessionTitle={currentQuestion.topic} />
+          <RecordingControls onSkip={handleSkip} onSubmit={handleSubmit} question={currentQuestion.question} sessionTitle={currentQuestion.topic} customContext={customContext} />
         </main>
 
         {/* Right Side Panel (AI Indicators) */}
